@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>AI 工具實戰</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  deck-stage:not(:defined) { visibility: hidden; }
+
+  :root {
+    --bg: #F7F3EC;
+    --bg-alt: #EDE6D6;
+    --ink: #0E1530;
+    --ink-soft: #2A3052;
+    --muted: #6E7290;
+    --line: #1A2040;
+    --blue: #2D5BFF;
+    --coral: #FF5236;
+    --lime: #C6F432;
+    --amber: #FFB627;
+
+    --type-display: 200px;
+    --type-hero: 132px;
+    --type-title: 76px;
+    --type-subtitle: 44px;
+    --type-body: 32px;
+    --type-small: 26px;
+    --type-tag: 22px;
+    --type-kbd: 20px;
+
+    --pad-top: 100px;
+    --pad-bottom: 90px;
+    --pad-x: 110px;
+    --gap-title: 52px;
+    --gap-item: 28px;
+
+    --font-display: 'Space Grotesk', 'Noto Sans TC', system-ui, sans-serif;
+    --font-body: 'Noto Sans TC', 'Space Grotesk', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Noto Sans TC', monospace;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0a0a0a; }
+
+  deck-stage section {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    overflow: hidden;
+    padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+  }
+  deck-stage section.dark {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  deck-stage section.dark .muted { color: #8A8FB0; }
+
+  .muted { color: var(--muted); }
+  .mono { font-family: var(--font-mono); }
+  .display { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; }
+
+  /* Page chrome */
+  .page-num {
+    position: absolute;
+    bottom: 36px; right: 48px;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+  .dark .page-num { color: #6B6F90; }
+
+  .page-tag {
+    position: absolute;
+    top: 36px; left: 48px;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .page-tag::before {
+    content: ""; width: 10px; height: 10px;
+    background: var(--coral); border-radius: 50%;
+    display: inline-block;
+  }
+  .dark .page-tag { color: #8A8FB0; }
+
+  /* ============== Animation primitives ============== */
+  /* Activated only when slide is active (.is-active) so they re-trigger on visit */
+  .anim { opacity: 0; }
+  .is-active .anim {
+    animation: fadeUp 0.7s cubic-bezier(.2,.7,.2,1) both;
+    animation-delay: var(--d, 0s);
+  }
+  .is-active .anim-fade { animation: fadeIn 0.8s ease both; animation-delay: var(--d, 0s); }
+  .is-active .anim-left { animation: slideRight 0.7s cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--d, 0s); }
+  .is-active .anim-scale { animation: popIn 0.6s cubic-bezier(.2,1.2,.4,1) both; animation-delay: var(--d, 0s); }
+  .is-active .anim-draw { animation: drawIn 1.2s ease both; animation-delay: var(--d, 0s); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideRight {
+    from { opacity: 0; transform: translateX(-40px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.7); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes drawIn {
+    from { stroke-dashoffset: var(--dash, 1000); opacity: 0; }
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  /* Typography helpers */
+  h1, h2, h3, p { margin: 0; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--type-tag);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--coral);
+    margin-bottom: 32px;
+  }
+  .dark .eyebrow { color: var(--lime); }
+  .title { font-family: var(--font-display); font-weight: 700; font-size: var(--type-title); line-height: 0.98; letter-spacing: -0.025em; }
+  .subtitle { font-size: var(--type-subtitle); line-height: 1.15; font-weight: 500; }
+  .body { font-size: var(--type-body); line-height: 1.45; }
+
+  /* Marks */
+  .underline-mark {
+    background-image: linear-gradient(transparent 62%, var(--lime) 62%, var(--lime) 92%, transparent 92%);
+    padding: 0 4px;
+  }
+  .ink-pill {
+    display: inline-block;
+    background: var(--ink); color: var(--bg);
+    padding: 4px 18px; border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: var(--type-tag);
+    letter-spacing: 0.06em;
+  }
+  .accent-blue { color: var(--blue); }
+  .accent-coral { color: var(--coral); }
+  .accent-lime-bg { background: var(--lime); color: var(--ink); }
+
+  /* Decorative dot grid backgrounds */
+  .grid-bg {
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, rgba(14,21,48,0.07) 1.2px, transparent 1.2px);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+  .dark .grid-bg {
+    background-image: radial-gradient(circle, rgba(247,243,236,0.08) 1.2px, transparent 1.2px);
+  }
+
+  /* ============== Slide-specific ============== */
+
+  /* S1 — Cover */
+  .cover { position: relative; display: flex; flex-direction: column; justify-content: center; }
+  .cover canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .cover-hero {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--type-hero);
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    position: relative; z-index: 2;
+  }
+  .cover-hero .line { display: block; overflow: hidden; }
+  .cover-hero .line span { display: inline-block; }
+  .is-active .cover-hero .line span {
+    animation: rise 0.9s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .is-active .cover-hero .line:nth-child(1) span { animation-delay: 0.1s; }
+  .is-active .cover-hero .line:nth-child(2) span { animation-delay: 0.25s; }
+  @keyframes rise {
+    from { transform: translateY(110%); }
+    to { transform: translateY(0); }
+  }
+  .cover-meta {
+    margin-top: 60px;
+    display: flex; gap: 40px;
+    font-family: var(--font-mono);
+    font-size: var(--type-small);
+    color: #9CA0C5;
+    z-index: 2; position: relative;
+  }
+  .cover-meta span { display: inline-flex; align-items: center; gap: 12px; }
+  .cover-meta .dot { width: 8px; height: 8px; background: var(--lime); border-radius: 50%; }
+  .cover-corner {
+    position: absolute; top: 56px; right: 56px;
+    font-family: var(--font-mono); font-size: 22px;
+    color: #9CA0C5; letter-spacing: 0.1em;
+    z-index: 2;
+  }
+  .cover-blob {
+    position: absolute; z-index: 1;
+    border-radius: 50%; filter: blur(80px);
+    opacity: 0.55;
+  }
+
+  /* S2 — Agenda */
+  .agenda { display: grid; grid-template-columns: 1fr 1.4fr; gap: 80px; align-items: center; height: 100%; }
+  .agenda-list { display: flex; flex-direction: column; gap: 18px; }
+  .agenda-item {
+    display: grid; grid-template-columns: 80px 1fr auto; gap: 28px; align-items: baseline;
+    padding: 18px 0; border-bottom: 1px solid rgba(14,21,48,0.12);
+    font-size: 38px;
+  }
+  .agenda-item .num { font-family: var(--font-mono); font-size: 24px; color: var(--coral); letter-spacing: 0.05em; }
+  .agenda-item .label { font-weight: 500; letter-spacing: -0.01em; }
+  .agenda-item .min { font-family: var(--font-mono); font-size: 22px; color: var(--muted); }
+
+  /* S3 — chat to action */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; height: 100%; align-items: center; }
+  .pane {
+    background: white;
+    border-radius: 24px;
+    padding: 56px;
+    border: 1px solid rgba(14,21,48,0.08);
+    height: 480px;
+    display: flex; flex-direction: column; gap: 24px;
+    position: relative; overflow: hidden;
+  }
+  .pane.right { background: var(--ink); color: var(--bg); }
+  .pane .label { font-family: var(--font-mono); font-size: 22px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .pane.right .label { color: var(--lime); }
+  .pane .big { font-family: var(--font-display); font-weight: 700; font-size: 76px; letter-spacing: -0.03em; line-height: 1; }
+  .pane .desc { font-size: 26px; line-height: 1.45; }
+  .arrow-between {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 92px; height: 92px;
+    border-radius: 50%; background: var(--coral); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 50px; z-index: 3;
+    box-shadow: 0 12px 40px rgba(255,82,54,0.4);
+  }
+  .is-active .arrow-between { animation: pulse 2s ease-in-out infinite, popIn 0.7s cubic-bezier(.2,1.2,.4,1) 0.6s both; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 12px 40px rgba(255,82,54,0.4); }
+    50% { box-shadow: 0 12px 60px rgba(255,82,54,0.7); }
+  }
+
+  /* S4 — three keywords flip cards */
+  .three-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; height: 640px; }
+  .flip-card {
+    perspective: 1200px;
+    cursor: pointer;
+  }
+  .flip-inner {
+    position: relative; width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(.2,.7,.2,1);
+  }
+  .flip-card:hover .flip-inner,
+  .flip-card.is-flipped .flip-inner {
+    transform: rotateY(180deg);
+  }
+  .flip-face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    border-radius: 28px;
+    padding: 48px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .flip-front.coral { background: var(--coral); color: white; }
+  .flip-front.blue { background: var(--blue); color: white; }
+  .flip-front.ink { background: var(--ink); color: white; }
+  .flip-back {
+    background: white; color: var(--ink);
+    transform: rotateY(180deg);
+    border: 2px solid var(--ink);
+  }
+  .flip-num {
+    font-family: var(--font-mono); font-size: 22px;
+    letter-spacing: 0.1em; opacity: 0.8;
+  }
+  .flip-word { font-family: var(--font-display); font-weight: 700; font-size: 96px; letter-spacing: -0.03em; line-height: 0.95; }
+  .flip-hint { font-size: 20px; opacity: 0.85; }
+  .flip-desc { font-size: 26px; line-height: 1.45; }
+
+  /* S5 / S9 / S11 — definition slides */
+  .def-row { display: grid; grid-template-columns: 1fr 1.1fr; gap: 100px; height: 100%; align-items: center; }
+  .def-word {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: var(--type-display); letter-spacing: -0.04em; line-height: 0.92;
+  }
+  .def-word small {
+    display: block; font-family: var(--font-mono); font-weight: 400;
+    font-size: 26px; color: var(--muted);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    margin-top: 24px;
+  }
+  .def-body { font-size: 36px; line-height: 1.45; }
+  .def-body .key { color: var(--coral); font-weight: 700; }
+
+  /* S6 — Agent loop SVG */
+  .loop-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; height: 100%; }
+  .loop-svg { width: 100%; height: 560px; }
+  .loop-node-circle {
+    fill: var(--bg);
+    stroke: var(--ink); stroke-width: 3;
+  }
+  .loop-node-circle.active { fill: var(--lime); }
+  .loop-label { font-family: var(--font-display); font-weight: 700; font-size: 36px; }
+  .loop-sub { font-family: var(--font-mono); font-size: 18px; fill: var(--muted); }
+  .loop-arc { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+  .is-active .loop-arc {
+    stroke-dasharray: 600;
+    stroke-dashoffset: 600;
+    animation: dashIn 1.5s ease forwards;
+    animation-delay: 0.3s;
+  }
+  @keyframes dashIn { to { stroke-dashoffset: 0; } }
+  .is-active .loop-orbit {
+    animation: spin 6s linear infinite;
+    transform-origin: 280px 280px;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* S7 — comparison table */
+  .vs-table {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0;
+    border: 2px solid var(--ink); border-radius: 20px; overflow: hidden;
+  }
+  .vs-cell { padding: 28px 32px; font-size: 28px; }
+  .vs-cell.head { background: var(--ink); color: var(--bg); font-family: var(--font-display); font-weight: 700; font-size: 32px; }
+  .vs-cell.row-label { font-family: var(--font-mono); color: var(--muted); font-size: 22px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .vs-cell:not(:last-child) { border-right: 1px solid rgba(14,21,48,0.15); }
+  .vs-row:not(:last-child) .vs-cell { border-bottom: 1px solid rgba(14,21,48,0.15); }
+  .vs-pill {
+    display: inline-block; padding: 6px 18px; border-radius: 999px;
+    font-size: 22px; font-family: var(--font-mono); letter-spacing: 0.05em;
+  }
+  .vs-pill.no { background: rgba(255,82,54,0.15); color: var(--coral); }
+  .vs-pill.yes { background: var(--lime); color: var(--ink); }
+
+  /* S8 — tool icons grid */
+  .tools-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+  }
+  .tool-card {
+    aspect-ratio: 1;
+    background: white; border-radius: 20px;
+    border: 1px solid rgba(14,21,48,0.1);
+    padding: 28px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, color 0.3s ease;
+    cursor: pointer;
+  }
+  .tool-card:hover {
+    transform: translateY(-8px) rotate(-2deg);
+    box-shadow: 0 20px 40px rgba(14,21,48,0.18);
+    background: var(--ink); color: var(--bg);
+  }
+  .tool-card:hover .tool-name { color: var(--lime); }
+  .tool-icon {
+    width: 64px; height: 64px; border-radius: 16px;
+    background: var(--bg-alt);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 32px;
+    color: var(--ink);
+  }
+  .tool-card:hover .tool-icon { background: var(--coral); color: white; }
+  .tool-name { font-family: var(--font-display); font-weight: 600; font-size: 28px; letter-spacing: -0.01em; transition: color 0.3s ease; }
+  .tool-tag { font-family: var(--font-mono); font-size: 16px; color: var(--muted); }
+  .tool-card:hover .tool-tag { color: rgba(247,243,236,0.7); }
+
+  /* S10 — Skills example terminal */
+  .terminal {
+    background: var(--ink); color: #D8DCFF;
+    border-radius: 20px; padding: 36px 44px;
+    font-family: var(--font-mono); font-size: 26px;
+    line-height: 1.7; min-height: 540px;
+    box-shadow: 0 30px 80px rgba(14,21,48,0.2);
+    position: relative;
+  }
+  .terminal-bar {
+    display: flex; gap: 10px; margin-bottom: 32px;
+  }
+  .terminal-bar span { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.25); }
+  .terminal-bar span:nth-child(1) { background: #FF5236; }
+  .terminal-bar span:nth-child(2) { background: #FFB627; }
+  .terminal-bar span:nth-child(3) { background: #C6F432; }
+  .term-line { display: block; }
+  .term-prompt { color: var(--lime); }
+  .term-comment { color: #6E7290; }
+  .term-key { color: var(--amber); }
+  .term-str { color: #9DF1AC; }
+  .cursor-blink::after {
+    content: "▊"; color: var(--lime);
+    animation: blink 1s steps(2) infinite;
+    margin-left: 4px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Typing animation — staggered reveal */
+  .is-active .term-line {
+    opacity: 0;
+    animation: typeAppear 0.4s ease forwards;
+  }
+
+  /* S11 — MCP simple diagram */
+  .mcp-diagram { display: flex; align-items: center; justify-content: center; gap: 40px; padding: 40px 0; }
+  .mcp-node {
+    background: white; border: 2px solid var(--ink);
+    border-radius: 20px; padding: 28px 36px;
+    font-family: var(--font-display); font-weight: 600;
+    font-size: 30px; min-width: 220px; text-align: center;
+  }
+  .mcp-node.ai { background: var(--ink); color: white; }
+  .mcp-node.mcp { background: var(--coral); color: white; border-color: var(--coral); }
+  .mcp-line {
+    flex: 1; height: 3px; background: var(--ink);
+    position: relative;
+  }
+  .mcp-line::after {
+    content: ""; position: absolute;
+    right: -2px; top: 50%; transform: translateY(-50%);
+    width: 14px; height: 14px;
+    border: 3px solid var(--ink); border-left: 0; border-bottom: 0;
+    transform: translateY(-50%) rotate(45deg);
+  }
+  .is-active .mcp-line {
+    background: linear-gradient(90deg, var(--ink) 50%, transparent 50%);
+    background-size: 200% 100%;
+    animation: flowLine 1.4s linear infinite;
+  }
+  @keyframes flowLine {
+    from { background-position: 100% 0; }
+    to { background-position: 0% 0; }
+  }
+
+  /* S12 — MCP design */
+  .mcp-layers { display: flex; flex-direction: column; gap: 18px; }
+  .mcp-layer {
+    background: white; border: 1px solid rgba(14,21,48,0.1);
+    border-radius: 16px; padding: 28px 36px;
+    display: grid; grid-template-columns: 120px 280px 1fr; gap: 36px; align-items: center;
+  }
+  .mcp-layer .l-num { font-family: var(--font-mono); font-size: 28px; color: var(--coral); }
+  .mcp-layer .l-name { font-family: var(--font-display); font-weight: 600; font-size: 32px; }
+  .mcp-layer .l-desc { font-size: 24px; color: var(--ink-soft); line-height: 1.4; }
+
+  /* S13 — Connectors grid */
+  .conn-grid {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 20px;
+  }
+  .conn-card {
+    aspect-ratio: 1.2;
+    background: white;
+    border: 1px solid rgba(14,21,48,0.1);
+    border-radius: 18px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    gap: 14px;
+    transition: all 0.3s ease;
+  }
+  .conn-card:hover {
+    background: var(--ink); color: white;
+    transform: scale(1.05);
+    border-color: var(--ink);
+  }
+  .conn-emoji {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: var(--bg-alt);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 26px;
+  }
+  .conn-card:hover .conn-emoji { background: var(--lime); color: var(--ink); }
+  .conn-name { font-family: var(--font-display); font-weight: 600; font-size: 24px; }
+
+  /* S14 — Three-way orchestration */
+  .orch-stage { position: relative; width: 100%; height: 620px; }
+  .orch-svg { position: absolute; inset: 0; }
+  .orch-node {
+    position: absolute;
+    background: white; border: 2px solid var(--ink);
+    border-radius: 24px; padding: 24px 32px;
+    font-family: var(--font-display); font-weight: 700;
+    text-align: center;
+    box-shadow: 0 16px 40px rgba(14,21,48,0.1);
+  }
+  .orch-node .n-title { font-size: 36px; letter-spacing: -0.01em; }
+  .orch-node .n-sub { font-family: var(--font-body); font-weight: 400; font-size: 20px; color: var(--muted); margin-top: 6px; }
+  .orch-node.agent { background: var(--ink); color: white; top: 0; left: 50%; transform: translateX(-50%); }
+  .orch-node.agent .n-sub { color: rgba(255,255,255,0.6); }
+  .orch-node.skills { background: var(--coral); color: white; border-color: var(--coral); bottom: 0; left: 8%; }
+  .orch-node.skills .n-sub { color: rgba(255,255,255,0.8); }
+  .orch-node.mcp { background: var(--blue); color: white; border-color: var(--blue); bottom: 0; right: 8%; }
+  .orch-node.mcp .n-sub { color: rgba(255,255,255,0.8); }
+  .orch-edge {
+    position: absolute; background: var(--ink);
+    height: 2px; transform-origin: left center;
+  }
+  .orch-tag {
+    position: absolute;
+    background: var(--lime); color: var(--ink);
+    padding: 4px 14px; border-radius: 999px;
+    font-family: var(--font-mono); font-size: 18px;
+    transform: translate(-50%, -50%);
+  }
+
+  /* S15 — stats / use cases */
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+  .stat-card {
+    background: white; border-radius: 24px;
+    border: 1px solid rgba(14,21,48,0.08);
+    padding: 48px;
+    display: flex; flex-direction: column; gap: 20px;
+    min-height: 380px;
+  }
+  .stat-num {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 140px; line-height: 0.9; letter-spacing: -0.04em;
+    color: var(--ink);
+  }
+  .stat-num .pct { font-size: 80px; color: var(--coral); }
+  .stat-label { font-family: var(--font-display); font-weight: 600; font-size: 30px; letter-spacing: -0.01em; }
+  .stat-desc { font-size: 22px; line-height: 1.45; color: var(--muted); }
+
+  /* S16 — hands-on terminal */
+  .step-list { display: flex; flex-direction: column; gap: 24px; }
+  .step-row {
+    display: grid; grid-template-columns: 80px 1fr;
+    gap: 32px; align-items: start;
+  }
+  .step-num {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--coral); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 30px;
+  }
+  .step-body { padding-top: 8px; }
+  .step-title { font-family: var(--font-display); font-weight: 600; font-size: 34px; margin-bottom: 6px; letter-spacing: -0.01em; }
+  .step-desc { font-size: 24px; color: var(--ink-soft); line-height: 1.4; }
+  .step-desc code { font-family: var(--font-mono); font-size: 22px; background: var(--bg-alt); padding: 4px 10px; border-radius: 8px; }
+
+  /* S17 — misconceptions */
+  .misc-list { display: flex; flex-direction: column; gap: 24px; }
+  .misc-row {
+    display: grid; grid-template-columns: 48px 1fr 48px 1fr;
+    gap: 28px; align-items: center;
+    padding: 24px 0;
+    border-bottom: 1px solid rgba(14,21,48,0.1);
+  }
+  .misc-row .x { color: var(--coral); font-size: 40px; font-weight: 700; text-align: center; }
+  .misc-row .v { color: var(--blue); font-size: 40px; font-weight: 700; text-align: center; }
+  .misc-row .myth { font-size: 26px; color: var(--muted); text-decoration: line-through; }
+  .misc-row .fact { font-size: 28px; color: var(--ink); font-weight: 500; }
+
+  /* S18 — recap */
+  .recap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .recap-card {
+    background: var(--bg-alt); border-radius: 24px;
+    padding: 40px;
+    display: flex; flex-direction: column; gap: 20px;
+    min-height: 380px;
+    border-left: 6px solid var(--coral);
+  }
+  .recap-card:nth-child(2) { border-left-color: var(--blue); }
+  .recap-card:nth-child(3) { border-left-color: var(--ink); }
+  .recap-eyebrow { font-family: var(--font-mono); font-size: 20px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+  .recap-word { font-family: var(--font-display); font-weight: 700; font-size: 56px; letter-spacing: -0.02em; line-height: 1; }
+  .recap-line { font-size: 24px; line-height: 1.45; }
+
+  /* S19 — QA */
+  .qa-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 60px; }
+  .qa-mark {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 520px; line-height: 0.85; letter-spacing: -0.06em;
+    color: var(--ink);
+    position: relative;
+  }
+  .qa-mark .amp { color: var(--coral); }
+  .is-active .qa-mark .q { animation: rise 0.9s cubic-bezier(.2,.7,.2,1) both; animation-delay: 0.2s; display: inline-block; }
+  .is-active .qa-mark .amp { animation: popIn 0.7s cubic-bezier(.2,1.2,.4,1) both; animation-delay: 0.5s; display: inline-block; }
+  .is-active .qa-mark .a { animation: rise 0.9s cubic-bezier(.2,.7,.2,1) both; animation-delay: 0.8s; display: inline-block; }
+  .qa-sub { font-family: var(--font-mono); font-size: 32px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; }
+
+  /* Section header style */
+  .section-cover { display: flex; flex-direction: column; justify-content: center; gap: 36px; position: relative; }
+  .section-num {
+    font-family: var(--font-mono); font-size: 26px;
+    letter-spacing: 0.18em; color: var(--coral);
+  }
+  .section-title {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 220px; line-height: 0.9; letter-spacing: -0.04em;
+  }
+
+  /* Section title for use as full slide */
+  /* Big number stat single */
+  .single-stat {
+    display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 36px;
+  }
+  .single-stat-num {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 460px; line-height: 0.85; letter-spacing: -0.05em;
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<script type="application/json" id="speaker-notes">[]</script>
+
+<deck-stage width="1920" height="1080">
+
+<!-- ============ 1. Cover ============ -->
+<section data-label="Cover" class="dark cover">
+  <canvas id="particles"></canvas>
+  <div class="cover-corner">2026 / LESSON 03</div>
+  <div class="cover-blob" style="width: 700px; height: 700px; background: var(--blue); left: -120px; top: -180px;"></div>
+  <div class="cover-blob" style="width: 540px; height: 540px; background: var(--coral); right: -120px; bottom: -120px;"></div>
+  <div style="position: relative; z-index: 3;">
+    <div class="anim" style="--d: 0s; font-family: var(--font-mono); font-size: 26px; color: var(--lime); letter-spacing: 0.2em; margin-bottom: 36px;">AI · SKILLS · AGENT · MCP</div>
+    <h1 class="cover-hero">
+      <span class="line"><span>AI 工具</span></span>
+      <span class="line"><span>實戰入門</span></span>
+    </h1>
+    <div class="cover-meta anim" style="--d: 0.9s;">
+      <span><span class="dot"></span>給大學生的 AI 觀念課</span>
+      <span style="opacity: 0.5;">|</span>
+      <span>Lesson 03</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. Agenda ============ -->
+<section data-label="Agenda">
+  <div class="grid-bg"></div>
+  <div class="page-tag">Agenda</div>
+  <div class="agenda">
+    <div>
+      <div class="eyebrow anim" style="--d: 0s;">今日地圖</div>
+      <h2 class="title anim" style="--d: 0.1s;">
+        從<span class="underline-mark">會聊天</span><br>
+        到<br>
+        會做事
+      </h2>
+    </div>
+    <div class="agenda-list">
+      <div class="agenda-item anim" style="--d: 0.3s;">
+        <span class="num">01</span><span class="label">為什麼 AI 不只是聊天機器人</span><span class="min">5 min</span>
+      </div>
+      <div class="agenda-item anim" style="--d: 0.4s;">
+        <span class="num">02</span><span class="label">三個關鍵字：Agent · Skills · MCP</span><span class="min">10 min</span>
+      </div>
+      <div class="agenda-item anim" style="--d: 0.5s;">
+        <span class="num">03</span><span class="label">它們怎麼一起工作</span><span class="min">8 min</span>
+      </div>
+      <div class="agenda-item anim" style="--d: 0.6s;">
+        <span class="num">04</span><span class="label">實際應用與動手練習</span><span class="min">5 min</span>
+      </div>
+      <div class="agenda-item anim" style="--d: 0.7s;">
+        <span class="num">05</span><span class="label">常見誤解與重點回顧</span><span class="min">2 min</span>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">02 / 19</div>
+</section>
+
+<!-- ============ 3. Chat to action ============ -->
+<section data-label="From chat to action">
+  <div class="page-tag">Chapter 01</div>
+  <div style="margin-bottom: 60px;">
+    <div class="eyebrow anim">從聊天到行動</div>
+    <h2 class="title anim" style="--d: 0.1s;">AI 不再只是<span class="underline-mark">回答你</span>，<br>它開始<span class="accent-coral">替你做事</span>。</h2>
+  </div>
+  <div class="split" style="height: 480px;">
+    <div class="pane anim-scale" style="--d: 0.3s;">
+      <div class="label">2022 — 2023</div>
+      <div class="big">會聊天</div>
+      <div class="desc">輸入問題 → 收到答案。<br>對話結束後一切歸零。</div>
+      <div class="mono" style="font-size: 22px; color: var(--muted); margin-top: auto;">CHATBOT</div>
+    </div>
+    <div class="arrow-between">→</div>
+    <div class="pane right anim-scale" style="--d: 0.6s;">
+      <div class="label">2024 — NOW</div>
+      <div class="big">會做事</div>
+      <div class="desc">給定目標 → 自己拆解、<br>調用工具、完成任務。</div>
+      <div class="mono" style="font-size: 22px; color: var(--lime); margin-top: auto;">AGENT</div>
+    </div>
+  </div>
+  <div class="page-num">03 / 19</div>
+</section>
+
+<!-- ============ 4. Three keywords flip cards ============ -->
+<section data-label="Three keywords">
+  <div class="page-tag">Chapter 02</div>
+  <div style="margin-bottom: 40px;">
+    <div class="eyebrow anim">三個關鍵字</div>
+    <h2 class="title anim" style="--d: 0.1s;">記住這三個詞，<br>你就抓得住整堂課。<span class="mono" style="font-size: 24px; color: var(--muted); margin-left: 16px;">/ hover 翻牌</span></h2>
+  </div>
+  <div class="three-grid">
+    <div class="flip-card anim-scale" style="--d: 0.3s;">
+      <div class="flip-inner">
+        <div class="flip-face flip-front ink">
+          <div class="flip-num">01</div>
+          <div>
+            <div class="flip-word">Agent</div>
+            <div class="flip-hint" style="margin-top: 16px;">代理人</div>
+          </div>
+          <div class="mono" style="font-size: 18px; opacity: 0.6;">→ HOVER</div>
+        </div>
+        <div class="flip-face flip-back">
+          <div class="flip-num accent-coral">01 · AGENT</div>
+          <div class="flip-desc">會自己拆解任務、選擇工具、執行、檢查結果的 AI。<br><br>不是一問一答，而是<strong>持續循環</strong>。</div>
+          <div class="mono" style="font-size: 18px; color: var(--muted);">代理人</div>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card anim-scale" style="--d: 0.45s;">
+      <div class="flip-inner">
+        <div class="flip-face flip-front coral">
+          <div class="flip-num">02</div>
+          <div>
+            <div class="flip-word">Skills</div>
+            <div class="flip-hint" style="margin-top: 16px;">技能</div>
+          </div>
+          <div class="mono" style="font-size: 18px; opacity: 0.6;">→ HOVER</div>
+        </div>
+        <div class="flip-face flip-back">
+          <div class="flip-num accent-coral">02 · SKILLS</div>
+          <div class="flip-desc">寫好的「做事說明書」。<br><br>讓 AI 知道<strong>什麼時候</strong>該做什麼、<strong>怎麼做</strong>。</div>
+          <div class="mono" style="font-size: 18px; color: var(--muted);">技能</div>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card anim-scale" style="--d: 0.6s;">
+      <div class="flip-inner">
+        <div class="flip-face flip-front blue">
+          <div class="flip-num">03</div>
+          <div>
+            <div class="flip-word">MCP</div>
+            <div class="flip-hint" style="margin-top: 16px;">模型上下文協定</div>
+          </div>
+          <div class="mono" style="font-size: 18px; opacity: 0.6;">→ HOVER</div>
+        </div>
+        <div class="flip-face flip-back">
+          <div class="flip-num accent-coral">03 · MCP</div>
+          <div class="flip-desc">AI 與外部世界溝通的「<strong>統一插頭</strong>」。<br><br>一個標準，連到所有工具。</div>
+          <div class="mono" style="font-size: 18px; color: var(--muted);">Model Context Protocol</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">04 / 19</div>
+</section>
+
+<!-- ============ 5. What is Agent ============ -->
+<section data-label="What is Agent">
+  <div class="page-tag">Agent · 01</div>
+  <div class="def-row">
+    <div class="anim-left">
+      <div class="ink-pill" style="margin-bottom: 32px;">01 / DEFINITION</div>
+      <div class="def-word">Agent<small>代理人</small></div>
+    </div>
+    <div class="def-body anim" style="--d: 0.3s;">
+      一個能<span class="key">自己思考、自己行動</span>的 AI。<br><br>
+      你給它一個目標，它會：<br>
+      <div style="margin-top: 24px; padding-left: 24px; border-left: 4px solid var(--lime); display: flex; flex-direction: column; gap: 12px;">
+        <div>① 想：這個目標需要做什麼？</div>
+        <div>② 做：呼叫合適的工具去執行</div>
+        <div>③ 看：檢查結果對不對</div>
+        <div>④ 修：不對就調整再試一次</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">05 / 19</div>
+</section>
+
+<!-- ============ 6. Agent loop ============ -->
+<section data-label="Agent loop">
+  <div class="page-tag">Agent · 02</div>
+  <div class="loop-wrap">
+    <div>
+      <div class="eyebrow anim">Agent 的循環</div>
+      <h2 class="title anim" style="--d: 0.1s;">Think → Act → Observe</h2>
+      <p class="body anim" style="--d: 0.3s; margin-top: 36px; max-width: 480px;">
+        Agent 最核心的就是這個迴圈。<br><br>
+        每一輪，AI 都在<span class="accent-coral" style="font-weight: 700;">縮短跟目標的距離</span>，直到任務完成。
+      </p>
+    </div>
+    <svg class="loop-svg" viewBox="0 0 560 560">
+      <!-- circular orbit dashed -->
+      <circle cx="280" cy="280" r="200" fill="none" stroke="rgba(14,21,48,0.15)" stroke-width="2" stroke-dasharray="6 8"/>
+      <!-- arc with arrow -->
+      <path class="loop-arc" d="M 280 80 A 200 200 0 0 1 453 380" stroke-dasharray="600" style="--dash:600;" stroke="var(--coral)" stroke-width="4"/>
+      <path class="loop-arc" d="M 453 380 A 200 200 0 0 1 107 380" stroke-dasharray="600" style="--dash:600;" stroke="var(--blue)" stroke-width="4"/>
+      <path class="loop-arc" d="M 107 380 A 200 200 0 0 1 280 80" stroke-dasharray="600" style="--dash:600;" stroke="var(--ink)" stroke-width="4"/>
+      <!-- nodes -->
+      <g>
+        <circle cx="280" cy="80" r="58" fill="var(--coral)"/>
+        <text x="280" y="78" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="26" fill="white">THINK</text>
+        <text x="280" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="rgba(255,255,255,0.8)">想</text>
+      </g>
+      <g>
+        <circle cx="453" cy="380" r="58" fill="var(--blue)"/>
+        <text x="453" y="378" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="28" fill="white">ACT</text>
+        <text x="453" y="402" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="rgba(255,255,255,0.8)">做</text>
+      </g>
+      <g>
+        <circle cx="107" cy="380" r="58" fill="var(--ink)"/>
+        <text x="107" y="376" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="20" fill="white">OBSERVE</text>
+        <text x="107" y="400" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="var(--lime)">看</text>
+      </g>
+      <!-- orbiting dot -->
+      <g class="loop-orbit">
+        <circle cx="480" cy="280" r="10" fill="var(--lime)"/>
+      </g>
+    </svg>
+  </div>
+  <div class="page-num">06 / 19</div>
+</section>
+
+<!-- ============ 7. Agent vs Chatbot ============ -->
+<section data-label="Agent vs Chatbot">
+  <div class="page-tag">Agent · 03</div>
+  <div style="margin-bottom: 50px;">
+    <div class="eyebrow anim">Agent vs Chatbot</div>
+    <h2 class="title anim" style="--d: 0.1s;">差別在<span class="underline-mark">主動性</span>。</h2>
+  </div>
+  <div class="vs-table anim" style="--d: 0.3s;">
+    <div class="vs-row" style="display: contents;">
+      <div class="vs-cell head"></div>
+      <div class="vs-cell head">Chatbot 聊天機器人</div>
+      <div class="vs-cell head">Agent 代理人</div>
+    </div>
+    <div class="vs-row" style="display: contents;">
+      <div class="vs-cell row-label">輸入</div>
+      <div class="vs-cell">一句話 / 一個問題</div>
+      <div class="vs-cell">一個目標 / 一個任務</div>
+    </div>
+    <div class="vs-row" style="display: contents;">
+      <div class="vs-cell row-label">輸出</div>
+      <div class="vs-cell">回答你</div>
+      <div class="vs-cell">完成事情</div>
+    </div>
+    <div class="vs-row" style="display: contents;">
+      <div class="vs-cell row-label">使用工具</div>
+      <div class="vs-cell"><span class="vs-pill no">通常不會</span></div>
+      <div class="vs-cell"><span class="vs-pill yes">會主動呼叫</span></div>
+    </div>
+    <div class="vs-row" style="display: contents;">
+      <div class="vs-cell row-label">多步驟</div>
+      <div class="vs-cell"><span class="vs-pill no">單次回應</span></div>
+      <div class="vs-cell"><span class="vs-pill yes">循環直到完成</span></div>
+    </div>
+  </div>
+  <div class="page-num">07 / 19</div>
+</section>
+
+<!-- ============ 8. Power of tools ============ -->
+<section data-label="Power of tools">
+  <div class="page-tag">Skills · 01</div>
+  <div style="margin-bottom: 50px;">
+    <div class="eyebrow anim">工具的力量</div>
+    <h2 class="title anim" style="--d: 0.1s;">沒有工具的 AI，<br>就像沒有手的大腦。<span class="mono" style="font-size: 22px; color: var(--muted); margin-left: 16px;">/ hover 看看</span></h2>
+  </div>
+  <div class="tools-grid">
+    <div class="tool-card anim-scale" style="--d: 0.3s;">
+      <div class="tool-icon">📄</div>
+      <div>
+        <div class="tool-name">讀檔案</div>
+        <div class="tool-tag">read_file()</div>
+      </div>
+    </div>
+    <div class="tool-card anim-scale" style="--d: 0.35s;">
+      <div class="tool-icon">🔍</div>
+      <div>
+        <div class="tool-name">搜尋網路</div>
+        <div class="tool-tag">web_search()</div>
+      </div>
+    </div>
+    <div class="tool-card anim-scale" style="--d: 0.4s;">
+      <div class="tool-icon">⌘</div>
+      <div>
+        <div class="tool-name">執行程式</div>
+        <div class="tool-tag">run_code()</div>
+      </div>
+    </div>
+    <div class="tool-card anim-scale" style="--d: 0.45s;">
+      <div class="tool-icon">✎</div>
+      <div>
+        <div class="tool-name">寫檔案</div>
+        <div class="tool-tag">write_file()</div>
+      </div>
+    </div>
+    <div class="tool-card anim-scale" style="--d: 0.5s;">
+      <div class="tool-icon">✉</div>
+      <div>
+        <div class="tool-name">寄信</div>
+        <div class="tool-tag">send_email()</div>
+      </div>
+    </div>
+    <div class="tool-card anim-scale" style="--d: 0.55s;">
+      <div class="tool-icon">📅</div>
+      <div>
+        <div class="tool-name">查行事曆</div>
+        <div class="tool-tag">get_calendar()</div>
+      </div>
+    </div>
+    <div class="tool-card anim-scale" style="--d: 0.6s;">
+      <div class="tool-icon">💾</div>
+      <div>
+        <div class="tool-name">查資料庫</div>
+        <div class="tool-tag">query_db()</div>
+      </div>
+    </div>
+    <div class="tool-card anim-scale" style="--d: 0.65s;">
+      <div class="tool-icon">···</div>
+      <div>
+        <div class="tool-name">任何 API</div>
+        <div class="tool-tag">call_api()</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">08 / 19</div>
+</section>
+
+<!-- ============ 9. What is Skills ============ -->
+<section data-label="What is Skills">
+  <div class="page-tag">Skills · 02</div>
+  <div class="def-row">
+    <div class="anim-left">
+      <div class="ink-pill" style="margin-bottom: 32px;">02 / DEFINITION</div>
+      <div class="def-word" style="font-size: 180px;">Skills<small>技能</small></div>
+    </div>
+    <div class="def-body anim" style="--d: 0.3s;">
+      一份寫給 AI 看的「<span class="key">做事說明書</span>」。<br><br>
+      告訴 AI：<br>
+      <div style="margin-top: 24px; padding-left: 24px; border-left: 4px solid var(--coral); display: flex; flex-direction: column; gap: 12px;">
+        <div>· 什麼<strong>情境</strong>下要啟動這個技能</div>
+        <div>· 該<strong>用哪些工具</strong>，依什麼順序</div>
+        <div>· 過程中要<strong>注意什麼</strong>細節</div>
+      </div>
+      <div style="margin-top: 28px; font-size: 26px; color: var(--muted);">
+        就像新員工的 SOP 手冊 —— 把專家經驗封裝成可重複的流程。
+      </div>
+    </div>
+  </div>
+  <div class="page-num">09 / 19</div>
+</section>
+
+<!-- ============ 10. Skills example ============ -->
+<section data-label="Skills example">
+  <div class="page-tag">Skills · 03</div>
+  <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 70px; align-items: start; margin-top: 30px;">
+    <div>
+      <div class="eyebrow anim">Skills 範例</div>
+      <h2 class="title anim" style="--d: 0.1s; font-size: 64px;">一個「期末報告」<br>的技能長這樣</h2>
+      <p class="body anim" style="--d: 0.3s; margin-top: 36px; color: var(--ink-soft);">
+        Skills 是純文字檔。<br>
+        簡單、可讀、人人能寫。
+      </p>
+      <div class="anim" style="--d: 0.5s; margin-top: 36px; display: flex; flex-direction: column; gap: 14px; font-size: 22px; font-family: var(--font-mono); color: var(--muted);">
+        <div>📁 skills/</div>
+        <div style="padding-left: 24px;">└─ final-report/</div>
+        <div style="padding-left: 48px;">├─ SKILL.md</div>
+        <div style="padding-left: 48px;">├─ template.docx</div>
+        <div style="padding-left: 48px;">└─ rubric.pdf</div>
+      </div>
+    </div>
+    <div class="terminal anim-scale" style="--d: 0.4s;">
+      <div class="terminal-bar"><span></span><span></span><span></span></div>
+      <span class="term-line"><span class="term-comment"># SKILL.md</span></span>
+      <span class="term-line"><span class="term-key">name</span>: 期末報告助手</span>
+      <span class="term-line"><span class="term-key">when</span>: <span class="term-str">"使用者要寫期末報告時"</span></span>
+      <span class="term-line">&nbsp;</span>
+      <span class="term-line"><span class="term-comment">## 步驟</span></span>
+      <span class="term-line"><span class="term-prompt">1.</span> 讀取 rubric.pdf 了解評分標準</span>
+      <span class="term-line"><span class="term-prompt">2.</span> 詢問題目並搜尋相關文獻</span>
+      <span class="term-line"><span class="term-prompt">3.</span> 套用 template.docx 寫出大綱</span>
+      <span class="term-line"><span class="term-prompt">4.</span> 逐段撰寫並引用來源</span>
+      <span class="term-line cursor-blink">&nbsp;</span>
+    </div>
+  </div>
+  <div class="page-num">10 / 19</div>
+</section>
+
+<!-- ============ 11. What is MCP ============ -->
+<section data-label="What is MCP">
+  <div class="page-tag">MCP · 01</div>
+  <div class="def-row">
+    <div class="anim-left">
+      <div class="ink-pill" style="margin-bottom: 32px;">03 / DEFINITION</div>
+      <div class="def-word" style="font-size: 220px;">MCP<small>Model Context Protocol</small></div>
+    </div>
+    <div class="def-body anim" style="--d: 0.3s;">
+      AI 跟<span class="key">外面世界</span>之間的<strong>共通語言</strong>。<br><br>
+      過去：每個工具一種接法，AI 廠商各做各的。<br>
+      現在：一個標準協定，<strong>插一次到處通</strong>。<br>
+      <div style="margin-top: 36px; font-size: 26px; color: var(--muted); border-top: 2px solid rgba(14,21,48,0.1); padding-top: 24px;">
+        💡 想成 USB-C：一個接頭，連螢幕、硬碟、手機、充電…全部搞定。
+      </div>
+    </div>
+  </div>
+  <div class="page-num">11 / 19</div>
+</section>
+
+<!-- ============ 12. MCP design ============ -->
+<section data-label="MCP design">
+  <div class="page-tag">MCP · 02</div>
+  <div style="margin-bottom: 36px;">
+    <div class="eyebrow anim">MCP 的設計</div>
+    <h2 class="title anim" style="--d: 0.1s;">三個角色，<br>一條共通的線。</h2>
+  </div>
+  <div class="mcp-diagram anim" style="--d: 0.4s; margin-top: 20px;">
+    <div class="mcp-node ai">AI 模型<div class="mono" style="font-size: 16px; opacity: 0.7; font-weight: 400; margin-top: 6px;">Host</div></div>
+    <div class="mcp-line"></div>
+    <div class="mcp-node mcp">MCP<div class="mono" style="font-size: 16px; opacity: 0.9; font-weight: 400; margin-top: 6px;">Protocol</div></div>
+    <div class="mcp-line"></div>
+    <div class="mcp-node">外部工具<div class="mono" style="font-size: 16px; color: var(--muted); font-weight: 400; margin-top: 6px;">Server</div></div>
+  </div>
+  <div class="mcp-layers" style="margin-top: 50px;">
+    <div class="mcp-layer anim" style="--d: 0.6s;">
+      <div class="l-num">HOST</div>
+      <div class="l-name">AI 模型端</div>
+      <div class="l-desc">Claude、Cursor、Claude Code 之類，發出工具請求。</div>
+    </div>
+    <div class="mcp-layer anim" style="--d: 0.75s;">
+      <div class="l-num">PROTOCOL</div>
+      <div class="l-name">MCP 協定</div>
+      <div class="l-desc">統一的訊息格式：列出工具、呼叫工具、回傳結果。</div>
+    </div>
+    <div class="mcp-layer anim" style="--d: 0.9s;">
+      <div class="l-num">SERVER</div>
+      <div class="l-name">工具端</div>
+      <div class="l-desc">任何服務寫一個 MCP server，就能被所有 AI 用。</div>
+    </div>
+  </div>
+  <div class="page-num">12 / 19</div>
+</section>
+
+<!-- ============ 13. Connectors ============ -->
+<section data-label="MCP connectors">
+  <div class="page-tag">MCP · 03</div>
+  <div style="margin-bottom: 36px;">
+    <div class="eyebrow anim">MCP 連接器</div>
+    <h2 class="title anim" style="--d: 0.1s;">一個協定，<br>連到整個世界。<span class="mono" style="font-size: 22px; color: var(--muted); margin-left: 16px;">/ hover</span></h2>
+  </div>
+  <div class="conn-grid">
+    <div class="conn-card anim-scale" style="--d: 0.3s;"><div class="conn-emoji">📁</div><div class="conn-name">檔案系統</div></div>
+    <div class="conn-card anim-scale" style="--d: 0.35s;"><div class="conn-emoji">🔍</div><div class="conn-name">網路搜尋</div></div>
+    <div class="conn-card anim-scale" style="--d: 0.4s;"><div class="conn-emoji">💾</div><div class="conn-name">資料庫</div></div>
+    <div class="conn-card anim-scale" style="--d: 0.45s;"><div class="conn-emoji">📝</div><div class="conn-name">筆記軟體</div></div>
+    <div class="conn-card anim-scale" style="--d: 0.5s;"><div class="conn-emoji">📅</div><div class="conn-name">行事曆</div></div>
+    <div class="conn-card anim-scale" style="--d: 0.55s;"><div class="conn-emoji">✉</div><div class="conn-name">電子郵件</div></div>
+    <div class="conn-card anim-scale" style="--d: 0.6s;"><div class="conn-emoji">🗂</div><div class="conn-name">雲端硬碟</div></div>
+    <div class="conn-card anim-scale" style="--d: 0.65s;"><div class="conn-emoji">⎇</div><div class="conn-name">版本控制</div></div>
+    <div class="conn-card anim-scale" style="--d: 0.7s;"><div class="conn-emoji">💬</div><div class="conn-name">聊天平台</div></div>
+    <div class="conn-card anim-scale" style="--d: 0.75s;"><div class="conn-emoji">🛒</div><div class="conn-name">電商系統</div></div>
+    <div class="conn-card anim-scale" style="--d: 0.8s;"><div class="conn-emoji">📊</div><div class="conn-name">試算表</div></div>
+    <div class="conn-card anim-scale" style="--d: 0.85s;"><div class="conn-emoji">···</div><div class="conn-name">任何 API</div></div>
+  </div>
+  <p class="body anim" style="--d: 1s; margin-top: 40px; text-align: center; color: var(--muted);">寫過一次 MCP server，所有支援 MCP 的 AI 都能用 — 不用重複造輪子。</p>
+  <div class="page-num">13 / 19</div>
+</section>
+
+<!-- ============ 14. Orchestration ============ -->
+<section data-label="Three together">
+  <div class="page-tag">Together · 01</div>
+  <div style="margin-bottom: 36px;">
+    <div class="eyebrow anim">三者協作</div>
+    <h2 class="title anim" style="--d: 0.1s;">Agent 是大腦，<br>Skills 是手冊，MCP 是手。</h2>
+  </div>
+  <div class="orch-stage anim-fade" style="--d: 0.4s; margin-top: 40px;">
+    <svg class="orch-svg" viewBox="0 0 1700 560" preserveAspectRatio="none">
+      <line x1="850" y1="160" x2="290" y2="400" stroke="var(--ink)" stroke-width="3" stroke-dasharray="8 8"/>
+      <line x1="850" y1="160" x2="1410" y2="400" stroke="var(--ink)" stroke-width="3" stroke-dasharray="8 8"/>
+      <line x1="290" y1="440" x2="1410" y2="440" stroke="var(--ink)" stroke-width="3" stroke-dasharray="8 8"/>
+    </svg>
+    <div class="orch-node agent" style="top: 0;">
+      <div class="n-title">Agent</div>
+      <div class="n-sub">想 / 決策 / 規劃</div>
+    </div>
+    <div class="orch-node skills">
+      <div class="n-title">Skills</div>
+      <div class="n-sub">怎麼做的說明書</div>
+    </div>
+    <div class="orch-node mcp">
+      <div class="n-title">MCP</div>
+      <div class="n-sub">連到外面的世界</div>
+    </div>
+    <div class="orch-tag" style="left: 32%; top: 50%;">參考</div>
+    <div class="orch-tag" style="left: 68%; top: 50%;">呼叫</div>
+    <div class="orch-tag" style="left: 50%; top: 78%;">配合</div>
+  </div>
+  <div class="page-num">14 / 19</div>
+</section>
+
+<!-- ============ 15. Use cases / stats ============ -->
+<section data-label="Use cases">
+  <div class="page-tag">Together · 02</div>
+  <div style="margin-bottom: 40px;">
+    <div class="eyebrow anim">應用場景</div>
+    <h2 class="title anim" style="--d: 0.1s;">這些事，AI 都可以替你做。</h2>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card anim-scale" style="--d: 0.3s;">
+      <div class="mono" style="font-size: 20px; color: var(--coral); letter-spacing: 0.1em;">CASE 01</div>
+      <div class="stat-num"><span class="counter" data-target="80">0</span><span class="pct">%</span></div>
+      <div class="stat-label">節省找資料時間</div>
+      <div class="stat-desc">交給 Agent 自動查文獻、整理、寫摘要，學生只審內容。</div>
+    </div>
+    <div class="stat-card anim-scale" style="--d: 0.5s;">
+      <div class="mono" style="font-size: 20px; color: var(--blue); letter-spacing: 0.1em;">CASE 02</div>
+      <div class="stat-num"><span class="counter" data-target="24">0</span><span class="pct">/7</span></div>
+      <div class="stat-label">隨時待命的助教</div>
+      <div class="stat-desc">期末熬夜趕報告？Agent 不睡，給你逐步指引和檢查。</div>
+    </div>
+    <div class="stat-card anim-scale" style="--d: 0.7s;">
+      <div class="mono" style="font-size: 20px; color: var(--ink); letter-spacing: 0.1em;">CASE 03</div>
+      <div class="stat-num">×<span class="counter" data-target="10">0</span></div>
+      <div class="stat-label">工作流自動化</div>
+      <div class="stat-desc">串聯郵件、日曆、檔案、筆記，把重複的事一次串起來。</div>
+    </div>
+  </div>
+  <div class="page-num">15 / 19</div>
+</section>
+
+<!-- ============ 16. Hands-on ============ -->
+<section data-label="Hands-on">
+  <div class="page-tag">Practice</div>
+  <div style="margin-bottom: 36px;">
+    <div class="eyebrow anim">動手練習</div>
+    <h2 class="title anim" style="--d: 0.1s;">課堂任務：<br>讓 AI 替你做一件事。</h2>
+  </div>
+  <div class="step-list" style="margin-top: 40px; max-width: 1300px;">
+    <div class="step-row anim-left" style="--d: 0.3s;">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">挑一件你最近做過的事</div>
+        <div class="step-desc">寫報告、訂飯店、整理筆記、找實習…任何重複性的事。</div>
+      </div>
+    </div>
+    <div class="step-row anim-left" style="--d: 0.45s;">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">拆成 3–5 個步驟</div>
+        <div class="step-desc">寫成像食譜一樣的清單，這就是你的<code>SKILL.md</code>原型。</div>
+      </div>
+    </div>
+    <div class="step-row anim-left" style="--d: 0.6s;">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">標出每一步「需要什麼工具」</div>
+        <div class="step-desc">查網路？讀檔案？發訊息？想想哪些可以用 MCP 連接器。</div>
+      </div>
+    </div>
+    <div class="step-row anim-left" style="--d: 0.75s;">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-title">給 Agent，看看它做得怎樣</div>
+        <div class="step-desc">不對的地方修一下說明書 — 你已經在做 prompt engineering 了。</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">16 / 19</div>
+</section>
+
+<!-- ============ 17. Misconceptions ============ -->
+<section data-label="Misconceptions">
+  <div class="page-tag">Common Mistakes</div>
+  <div style="margin-bottom: 40px;">
+    <div class="eyebrow anim">常見誤解</div>
+    <h2 class="title anim" style="--d: 0.1s;">這些觀念，<br>一不小心就會搞錯。</h2>
+  </div>
+  <div class="misc-list" style="margin-top: 40px;">
+    <div class="misc-row anim-left" style="--d: 0.3s;">
+      <div class="x">×</div>
+      <div class="myth">Agent = 更聰明的 ChatGPT</div>
+      <div class="v">✓</div>
+      <div class="fact">Agent ＝ 模型 ＋ 工具 ＋ 循環邏輯</div>
+    </div>
+    <div class="misc-row anim-left" style="--d: 0.45s;">
+      <div class="x">×</div>
+      <div class="myth">Skills 是程式碼，要寫程式才行</div>
+      <div class="v">✓</div>
+      <div class="fact">Skills 通常就是一份 Markdown 純文字</div>
+    </div>
+    <div class="misc-row anim-left" style="--d: 0.6s;">
+      <div class="x">×</div>
+      <div class="myth">MCP 是某家公司的產品</div>
+      <div class="v">✓</div>
+      <div class="fact">MCP 是開放協定，任何 AI 都能實作</div>
+    </div>
+    <div class="misc-row anim-left" style="--d: 0.75s;">
+      <div class="x">×</div>
+      <div class="myth">AI 自己會做，我都不用管</div>
+      <div class="v">✓</div>
+      <div class="fact">寫好 Skills、驗證結果，仍是你的責任</div>
+    </div>
+  </div>
+  <div class="page-num">17 / 19</div>
+</section>
+
+<!-- ============ 18. Recap ============ -->
+<section data-label="Recap">
+  <div class="page-tag">Recap</div>
+  <div style="margin-bottom: 40px;">
+    <div class="eyebrow anim">重點回顧</div>
+    <h2 class="title anim" style="--d: 0.1s;">三個詞，<br>記在腦袋裡帶走。</h2>
+  </div>
+  <div class="recap-grid" style="margin-top: 40px;">
+    <div class="recap-card anim-scale" style="--d: 0.3s;">
+      <div class="recap-eyebrow">01</div>
+      <div class="recap-word">Agent</div>
+      <div class="recap-line">會自己想、做、看、修的 AI。<br><br>一個有目標的<strong>大腦</strong>。</div>
+    </div>
+    <div class="recap-card anim-scale" style="--d: 0.5s;">
+      <div class="recap-eyebrow">02</div>
+      <div class="recap-word">Skills</div>
+      <div class="recap-line">寫給 AI 看的<br>做事說明書。<br><br>專家經驗的<strong>包裝</strong>。</div>
+    </div>
+    <div class="recap-card anim-scale" style="--d: 0.7s;">
+      <div class="recap-eyebrow">03</div>
+      <div class="recap-word">MCP</div>
+      <div class="recap-line">AI 與工具之間<br>的共通協定。<br><br>連到世界的<strong>插頭</strong>。</div>
+    </div>
+  </div>
+  <div class="page-num">18 / 19</div>
+</section>
+
+<!-- ============ 19. Q & A ============ -->
+<section data-label="Q&amp;A" class="dark">
+  <div class="grid-bg"></div>
+  <div class="qa-stage">
+    <div class="qa-mark"><span class="q">Q</span><span class="amp">&amp;</span><span class="a">A</span></div>
+    <div class="qa-sub anim" style="--d: 1.1s;">提問時間 · 動手做做看</div>
+  </div>
+  <div class="page-num" style="color: #8A8FB0;">19 / 19</div>
+</section>
+
+</deck-stage>
+
+<script src="deck-stage.js"></script>
+
+<script>
+  // ============== Particles on cover ==============
+  (function() {
+    const canvas = document.getElementById('particles');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W = 1920, H = 1080;
+    function resize() {
+      W = canvas.width = canvas.clientWidth * 2;
+      H = canvas.height = canvas.clientHeight * 2;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const particles = [];
+    const PCOUNT = 90;
+    for (let i = 0; i < PCOUNT; i++) {
+      particles.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+        r: Math.random() * 3 + 1
+      });
+    }
+
+    function tick() {
+      ctx.clearRect(0, 0, W, H);
+      // lines
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const d = Math.sqrt(dx*dx + dy*dy);
+          if (d < 280) {
+            const a = (1 - d/280) * 0.35;
+            ctx.strokeStyle = `rgba(198,244,50,${a})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      // dots
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > W) p.vx *= -1;
+        if (p.y < 0 || p.y > H) p.vy *= -1;
+        ctx.fillStyle = 'rgba(247,243,236,0.7)';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      requestAnimationFrame(tick);
+    }
+    tick();
+  })();
+
+  // ============== Active-slide animation trigger ==============
+  document.addEventListener('DOMContentLoaded', () => {
+    const stage = document.querySelector('deck-stage');
+    if (!stage) return;
+
+    function setActive(idx) {
+      stage.querySelectorAll('section').forEach((s, i) => {
+        s.classList.toggle('is-active', i === idx);
+      });
+      // animate counters
+      const active = stage.querySelectorAll('section')[idx];
+      if (!active) return;
+      active.querySelectorAll('.counter').forEach(el => {
+        const target = parseInt(el.dataset.target, 10);
+        let start = 0;
+        const duration = 1200;
+        const t0 = performance.now();
+        function step(now) {
+          const t = Math.min(1, (now - t0) / duration);
+          const eased = 1 - Math.pow(1 - t, 3);
+          el.textContent = Math.round(target * eased);
+          if (t < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      });
+    }
+
+    // initial
+    setTimeout(() => setActive(0), 100);
+
+    stage.addEventListener('slidechange', (e) => {
+      setActive(e.detail.index);
+    });
+  });
+</script>
+
+</body>
+</html>
