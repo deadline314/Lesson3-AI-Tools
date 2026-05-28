@@ -296,6 +296,145 @@ function initTab(tabId) {
 }
 
 // ═══════ T0: MODELS ═══════
+const MODEL_CALC_PRICING = {
+  opus:         { input: 15,   output: 75,  label: "Claude Opus 4.7" },
+  sonnet:       { input: 3,    output: 15,  label: "Claude Sonnet 4.6" },
+  haiku:        { input: 0.80, output: 4,   label: "Claude Haiku 4.5" },
+  gpt5:         { input: 10,   output: 30,  label: "GPT-5" },
+  gpt5mini:     { input: 5,    output: 15,  label: "GPT-5 mini" },
+  "gemini-pro": { input: 2.50, output: 10,  label: "Gemini 3 Pro" },
+  "gemini-flash": { input: 0.25, output: 1, label: "Gemini 3 Flash" }
+};
+
+const SELECTOR_RECOMMENDATIONS = {
+  "coding-agent": { tier: 1, family: "Claude", model: "Claude Opus 4.7 / Sonnet 4.6", reason: "Agentic coding 任務 Claude 的精準度最高，能正確使用工具不亂跑。" },
+  "coding-simple": { tier: 3, family: "Cursor", model: "Composer 2 / Claude Haiku 4.5", reason: "簡單補全用快的就好，Composer 2 是 IDE 內最快的選擇。" },
+  "chat":          { tier: 2, family: "GPT", model: "GPT-5 mini", reason: "日常對話 GPT 自然又直接，速度跟價格都剛好。" },
+  "docs":          { tier: 2, family: "Gemini", model: "Gemini 3 Pro", reason: "Gemini 是長文件分析之王，2M context window 一次塞完整本書。" },
+  "classification": { tier: 3, family: "Gemini / Claude", model: "Gemini 3 Flash / Haiku 4.5", reason: "高頻分類任務用最便宜的 Tier 3，每天叫幾千次也不破產。" },
+  "reasoning":     { tier: 1, family: "OpenAI / Claude", model: "o3 / Claude Opus 4.7", reason: "數學邏輯題用 Reasoning Model，準確率比普通模型高 30-50%。" },
+  "creative":      { tier: 2, family: "Claude", model: "Claude Sonnet 4.6", reason: "Claude 的文字風格最自然，創意寫作不會有 AI 味。" }
+};
+
+function buildSelectorResult(task, budget, privacy, speed) {
+  if (privacy === "strict") {
+    return {
+      title: "🔒 推薦：開源模型 + 自架",
+      model: "Llama 4 70B / Qwen 3 / DeepSeek V4",
+      reason: "你勾了「不能送上雲端」——這條件會直接覆蓋所有其他選項。任何雲端 API 都不適合，必須自架。",
+      warning: "需要 GPU 資源（A100 或租 GPU 雲），起步成本高但隱私 100% 自己掌握。",
+      tier: "self-host"
+    };
+  }
+
+  const base = SELECTOR_RECOMMENDATIONS[task];
+  if (!base) {
+    return { title: "請先選任務類型", model: "—", reason: "選擇你的主要任務後我才能精準推薦。", tier: 0 };
+  }
+
+  let title = `推薦 Tier ${base.tier} · ${base.family} 系`;
+  let model = base.model;
+  let reason = base.reason;
+  let warning = "";
+
+  if (budget === "tight" && base.tier === 1) {
+    title = "⚠️ 預算太緊，降級推薦";
+    model = "Claude Sonnet 4.6 / GPT-5 mini";
+    reason = "你的任務本來適合旗艦，但預算不允許。降到 Tier 2 可以用 1/5 的價格拿到 80% 的能力。";
+    warning = "若遇到困難子任務，再單次升級到 Opus/o3 處理那一段。";
+  } else if (budget === "moderate" && base.tier === 1) {
+    warning = "中等預算下使用旗艦要注意：開 Prompt Caching、能用 Batch API 就用，能省 50-90%。";
+  }
+
+  if (speed === "realtime" && (base.tier === 1 || task === "reasoning")) {
+    title = "⚡ 即時需求 → 不能用慢模型";
+    model = "Claude Haiku 4.5 / Gemini 3 Flash / Composer 2";
+    reason = "<1 秒的回應需求排除了所有旗艦和 Reasoning Model（思考就要 5-30 秒）。必須用 Tier 3。";
+    warning = "若任務需要深度推理，考慮預生成或非同步處理，不要強求即時。";
+  }
+
+  return { title, model, reason, warning, tier: base.tier };
+}
+
+function renderSelectorResult(container, result) {
+  const tierColor = result.tier === 1 ? "var(--accent)" : result.tier === 2 ? "var(--yellow)" : result.tier === 3 ? "var(--green)" : "var(--ink)";
+  container.innerHTML = `
+    <div style="border-top:2px dashed var(--grid);padding-top:1.25rem;margin-top:1.25rem;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:${tierColor};margin-bottom:0.5rem;">${result.title}</div>
+      <div style="font-size:1.05rem;font-weight:700;margin-bottom:0.75rem;">${result.model}</div>
+      <p style="font-size:0.9rem;line-height:1.7;margin-bottom:${result.warning ? "0.75rem" : "0"};">${result.reason}</p>
+      ${result.warning ? `<div class="highlight-box" style="font-size:0.85rem;">💡 ${result.warning}</div>` : ""}
+    </div>
+  `;
+  container.style.display = "block";
+}
+
+const NORMAL_REASONING_FLOW = [
+  { delay: 400, html: "嗯，4 個角，每個角 1 隻貓..." },
+  { delay: 800, html: "每隻貓面前有 3 隻貓..." },
+  { delay: 700, html: "<strong style='color:var(--accent);'>所以總共 4 + 3 = 7 隻？</strong> ❌" }
+];
+
+const REASONING_THINKING_FLOW = [
+  "讓我仔細分析這題的陷阱在哪裡...",
+  "「每隻貓面前有 3 隻貓」是關鍵描述",
+  "如果有 N 隻貓，每隻面前看到 N-1 隻",
+  "所以 N - 1 = 3，N = 4",
+  "等等，房間有 4 個角，每角 1 隻，剛好 4 隻",
+  "驗證：4 隻貓，每隻看其他 3 隻，吻合題目",
+  "最終答案：4 隻"
+];
+
+const REASONING_ANSWER_FLOW = [
+  { delay: 400, html: "經過 7 步推理..." },
+  { delay: 600, html: "<strong style='color:var(--green);'>答案是 4 隻貓。</strong> ✓" },
+  { delay: 500, html: "<span style='font-size:0.8rem;opacity:0.7;'>「面前」可以同時是別人的「面前」——4 隻貓互相面對即可。</span>" }
+];
+
+async function playReasoningDemo(panel) {
+  const normalOut = panel.querySelector("#normalModelOutput");
+  const thinkBox = panel.querySelector("#reasoningThinking");
+  const thinkContent = panel.querySelector("#thinkingContent");
+  const reasonOut = panel.querySelector("#reasoningModelOutput");
+  if (!normalOut || !thinkContent || !reasonOut) return;
+
+  normalOut.innerHTML = "";
+  thinkContent.innerHTML = "";
+  reasonOut.innerHTML = "";
+  if (thinkBox) thinkBox.classList.add("active");
+
+  const normalPromise = (async () => {
+    for (const step of NORMAL_REASONING_FLOW) {
+      await sleep(step.delay);
+      const p = document.createElement("p");
+      p.style.margin = "0.4rem 0";
+      p.innerHTML = step.html;
+      normalOut.appendChild(p);
+    }
+  })();
+
+  const reasoningPromise = (async () => {
+    for (const line of REASONING_THINKING_FLOW) {
+      await sleep(700);
+      const span = document.createElement("div");
+      span.className = "thinking-token";
+      span.style.cssText = "display:block;margin:0.3rem 0;";
+      span.textContent = "💭 " + line;
+      thinkContent.appendChild(span);
+    }
+    await sleep(500);
+    for (const step of REASONING_ANSWER_FLOW) {
+      await sleep(step.delay);
+      const p = document.createElement("p");
+      p.style.margin = "0.4rem 0";
+      p.innerHTML = step.html;
+      reasonOut.appendChild(p);
+    }
+  })();
+
+  await Promise.all([normalPromise, reasoningPromise]);
+}
+
 function initT0(panel) {
   if (panel.dataset.init) return;
   panel.dataset.init = "1";
@@ -308,48 +447,138 @@ function initT0(panel) {
     });
   });
 
-  const modelOptions = panel.querySelectorAll(".model-option");
-  const recPanel = panel.querySelector(".model-recommendation");
-  modelOptions.forEach(opt => {
-    opt.addEventListener("click", () => {
-      modelOptions.forEach(o => o.classList.remove("selected"));
-      opt.classList.add("selected");
-      if (recPanel) { recPanel.innerHTML = opt.dataset.rec || ""; recPanel.classList.add("show"); }
+  // ─── MODEL SELECTOR ───
+  const submitBtn = panel.querySelector("#selectorSubmit");
+  const resultEl = panel.querySelector("#selectorResult");
+  if (submitBtn && resultEl) {
+    submitBtn.addEventListener("click", () => {
+      const task = panel.querySelector("#selectorTask")?.value || "";
+      const budget = panel.querySelector("#selectorBudget")?.value || "";
+      const privacy = panel.querySelector("#selectorPrivacy")?.value || "";
+      const speed = panel.querySelector("#selectorSpeed")?.value || "";
+      const result = buildSelectorResult(task, budget, privacy, speed);
+      renderSelectorResult(resultEl, result);
     });
-  });
+  }
 
-  const calcInputs = panel.querySelectorAll(".calc-input");
-  const calcResult = panel.querySelector(".calc-result");
-  calcInputs.forEach(input => {
-    input.addEventListener("input", () => {
-      const tier = panel.querySelector(".calc-tier")?.value || "workhorse";
-      const tokensPerDay = parseInt(panel.querySelector(".calc-tokens")?.value) || 0;
-      const daysPerMonth = parseInt(panel.querySelector(".calc-days")?.value) || 20;
-      const pricing = MODEL_PRICING[tier];
-      const monthlyCost = ((tokensPerDay * daysPerMonth) / 1000000) * ((pricing.input + pricing.output) / 2);
-      if (calcResult) calcResult.textContent = `\u2248 $${monthlyCost.toFixed(2)} / \u6708`;
+  // ─── COST CALCULATOR ───
+  const calcBtn = panel.querySelector("#calcBtn");
+  const calcAmountEl = panel.querySelector("#calcAmount");
+  const calcBreakdownEl = panel.querySelector("#calcBreakdown");
+  function runCalc() {
+    if (!calcAmountEl) return;
+    const modelKey = panel.querySelector("#calcModel")?.value || "sonnet";
+    const inputTokens = parseInt(panel.querySelector("#calcInput")?.value) || 0;
+    const outputTokens = parseInt(panel.querySelector("#calcOutput")?.value) || 0;
+    const callsPerDay = parseInt(panel.querySelector("#calcCalls")?.value) || 0;
+    const useCache = panel.querySelector("#calcCache")?.checked || false;
+    const useBatch = panel.querySelector("#calcBatch")?.checked || false;
+    const pricing = MODEL_CALC_PRICING[modelKey];
+    if (!pricing) return;
+
+    const monthlyCalls = callsPerDay * 30;
+    const inputRate = useCache ? pricing.input * 0.1 : pricing.input;
+    let inputCost = (monthlyCalls * inputTokens / 1_000_000) * inputRate;
+    let outputCost = (monthlyCalls * outputTokens / 1_000_000) * pricing.output;
+    if (useBatch) { inputCost *= 0.5; outputCost *= 0.5; }
+    const total = inputCost + outputCost;
+
+    calcAmountEl.textContent = `$${total.toFixed(2)}`;
+    if (calcBreakdownEl) {
+      calcBreakdownEl.innerHTML = `
+        <div style="font-size:0.78rem;opacity:0.85;margin-top:0.5rem;line-height:1.6;">
+          ${pricing.label} · ${monthlyCalls.toLocaleString()} 次/月<br>
+          Input: $${inputCost.toFixed(2)}　Output: $${outputCost.toFixed(2)}
+          ${useCache ? "<br>✓ Prompt Cache 已套用 (-90% input)" : ""}
+          ${useBatch ? "<br>✓ Batch API 已套用 (-50%)" : ""}
+        </div>
+      `;
+    }
+  }
+  if (calcBtn) calcBtn.addEventListener("click", runCalc);
+  ["#calcModel", "#calcInput", "#calcOutput", "#calcCalls", "#calcCache", "#calcBatch"].forEach(sel => {
+    const el = panel.querySelector(sel);
+    if (el) el.addEventListener("change", runCalc);
+  });
+  runCalc();
+
+  // ─── REASONING DEMO ───
+  const reasonPlayBtn = panel.querySelector("#reasoningPlay");
+  const reasonResetBtn = panel.querySelector("#reasoningReset");
+  if (reasonPlayBtn) {
+    reasonPlayBtn.addEventListener("click", async () => {
+      reasonPlayBtn.disabled = true;
+      await playReasoningDemo(panel);
+      reasonPlayBtn.disabled = false;
     });
-  });
+  }
+  if (reasonResetBtn) {
+    reasonResetBtn.addEventListener("click", () => {
+      const placeholder = '<p class="reasoning-placeholder">按下方按鈕觀看回答過程</p>';
+      const normalOut = panel.querySelector("#normalModelOutput");
+      const reasonOut = panel.querySelector("#reasoningModelOutput");
+      const thinkContent = panel.querySelector("#thinkingContent");
+      if (normalOut) normalOut.innerHTML = placeholder;
+      if (reasonOut) reasonOut.innerHTML = placeholder;
+      if (thinkContent) thinkContent.innerHTML = "";
+    });
+  }
 
-  const reasonBtn = panel.querySelector(".reasoning-play");
-  const reasonOutput = panel.querySelector(".reasoning-output");
-  if (reasonBtn && reasonOutput) {
-    reasonBtn.addEventListener("click", async () => {
-      reasonBtn.disabled = true;
-      reasonOutput.innerHTML = "";
-      const tokens = ["\u5206\u6790\u554f\u984c\u7d50\u69cb...", "\u8003\u616e\u908a\u754c\u60c5\u6cc1...", "\u9a57\u8b49\u5047\u8a2d...", "\u63a8\u5c0e\u6700\u4f73\u65b9\u6848..."];
-      for (const token of tokens) {
-        const span = document.createElement("span");
-        span.className = "thinking-token";
-        span.textContent = token + " ";
-        reasonOutput.appendChild(span);
-        await sleep(ANIMATION_SPEED.slow);
+  // ─── DRAG-DROP MATCH GAME ───
+  const matchGame = panel.querySelector("#modelMatchGame");
+  if (matchGame) {
+    matchGame.querySelectorAll(".match-tool").forEach(tool => {
+      tool.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", tool.dataset.tool); tool.style.opacity = "0.5"; });
+      tool.addEventListener("dragend", () => { tool.style.opacity = ""; });
+    });
+    matchGame.querySelectorAll(".match-drop").forEach(drop => {
+      drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("dragover"); });
+      drop.addEventListener("dragleave", () => { drop.classList.remove("dragover"); });
+      drop.addEventListener("drop", e => {
+        e.preventDefault();
+        drop.classList.remove("dragover");
+        const toolId = e.dataTransfer.getData("text/plain");
+        const toolEl = matchGame.querySelector(`.match-tool[data-tool="${toolId}"]`);
+        drop.textContent = toolEl ? toolEl.textContent : toolId;
+        drop.dataset.placed = toolId;
+        drop.classList.add("filled");
+        if (toolEl) toolEl.classList.add("placed");
+      });
+    });
+
+    const checkBtn = panel.querySelector("#modelMatchCheck");
+    const resetBtn = panel.querySelector("#modelMatchReset");
+    const resultBox = panel.querySelector("#modelMatchResult");
+    if (checkBtn) checkBtn.addEventListener("click", () => {
+      let correct = 0;
+      const slots = matchGame.querySelectorAll(".match-slot");
+      slots.forEach(slot => {
+        const drop = slot.querySelector(".match-drop");
+        if (!drop) return;
+        if (drop.dataset.placed === slot.dataset.answer) {
+          correct++;
+          drop.style.borderColor = "var(--green)";
+          drop.style.background = "rgba(0,200,83,0.1)";
+        } else if (drop.dataset.placed) {
+          drop.style.borderColor = "var(--accent)";
+          drop.style.background = "rgba(255,87,34,0.1)";
+        }
+      });
+      if (resultBox) {
+        resultBox.className = `match-result show ${correct === slots.length ? "correct" : "partial"}`;
+        resultBox.textContent = correct === slots.length ? "全對！漂亮 🎯" : `${correct}/${slots.length} 正確`;
       }
-      const answer = document.createElement("div");
-      answer.className = "reasoning-answer";
-      answer.textContent = "\u2192 \u7d50\u8ad6\uff1a\u4f7f\u7528 Dynamic Programming \u53ef\u4ee5\u5c07\u6642\u9593\u8907\u96dc\u5ea6\u5f9e O(2^n) \u964d\u5230 O(n\u00b2)";
-      reasonOutput.appendChild(answer);
-      reasonBtn.disabled = false;
+    });
+    if (resetBtn) resetBtn.addEventListener("click", () => {
+      matchGame.querySelectorAll(".match-drop").forEach(d => {
+        d.textContent = "";
+        d.dataset.placed = "";
+        d.classList.remove("filled");
+        d.style.borderColor = "";
+        d.style.background = "";
+      });
+      matchGame.querySelectorAll(".match-tool").forEach(t => t.classList.remove("placed"));
+      if (resultBox) { resultBox.className = "match-result"; resultBox.textContent = ""; }
     });
   }
 }
@@ -533,15 +762,83 @@ function initT1(panel) {
   };
 
   // CLAUDE.md Builder
-  const claudeFields = panel.querySelectorAll(".claude-field");
-  const claudePreview = panel.querySelector(".claude-preview");
-  claudeFields.forEach(field => {
-    field.addEventListener("input", () => {
-      if (!claudePreview) return;
-      let output = "# CLAUDE.md\n\n";
-      claudeFields.forEach(f => { if (f.value.trim()) output += `## ${f.dataset.label}\n${f.value.trim()}\n\n`; });
-      claudePreview.textContent = output;
-    });
+  const cmdPreview = panel.querySelector("#cmdPreview");
+  const cmdGenerateBtn = panel.querySelector("#cmdGenerate");
+  const cmdCopyBtn = panel.querySelector("#cmdCopy");
+  const cmdInputIds = ["cmdName", "cmdStack", "cmdBuild", "cmdTest", "cmdLint", "cmdStyle", "cmdForbid", "cmdCommit"];
+  const cmdInputs = cmdInputIds.map(id => panel.querySelector(`#${id}`)).filter(Boolean);
+
+  function buildClaudeMd() {
+    const get = id => (panel.querySelector(`#${id}`)?.value || "").trim();
+    const splitList = v => v.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+    const name = get("cmdName");
+    const stack = get("cmdStack");
+    const build = get("cmdBuild");
+    const test = get("cmdTest");
+    const lint = get("cmdLint");
+    const styles = splitList(get("cmdStyle"));
+    const forbids = splitList(get("cmdForbid"));
+    const commit = get("cmdCommit");
+
+    const lines = [];
+    lines.push(`# CLAUDE.md`);
+    lines.push("");
+    lines.push(`> 這份檔案讓 Claude Code 認識你的專案。請保持簡潔、可執行。`);
+    lines.push("");
+    lines.push(`## Project`);
+    lines.push(`- Name: ${name || "(未填)"}`);
+    lines.push(`- Stack: ${stack || "(未填)"}`);
+    lines.push("");
+    lines.push(`## Commands`);
+    if (build) lines.push(`- Build: \`${build}\``);
+    if (test) lines.push(`- Test: \`${test}\``);
+    if (lint) lines.push(`- Lint / Fix: \`${lint}\``);
+    if (!build && !test && !lint) lines.push(`- (尚未填寫常用指令)`);
+    lines.push("");
+    lines.push(`## Code Style`);
+    if (styles.length) styles.forEach(s => lines.push(`- ${s}`));
+    else lines.push(`- (尚未填寫 code style 重點)`);
+    lines.push("");
+    lines.push(`## Do Not Touch`);
+    if (forbids.length) forbids.forEach(s => lines.push(`- ${s}`));
+    else lines.push(`- (尚未填寫不能碰的檔案 / 目錄)`);
+    lines.push("");
+    lines.push(`## Commit / PR`);
+    lines.push(`- Format: ${commit || "(未填)"}`);
+    lines.push("");
+    lines.push(`## Workflow Hints`);
+    lines.push(`- 改動前先看相關檔案，不要破壞既有功能。`);
+    lines.push(`- 新增 / 修改函式前，先確認或補上對應測試 (TDD)。`);
+    lines.push(`- 提交前跑一次 lint 與 test。`);
+    return lines.join("\n");
+  }
+
+  function renderClaudeMd() {
+    if (!cmdPreview) return;
+    const anyFilled = cmdInputs.some(i => i.value.trim());
+    if (!anyFilled) {
+      cmdPreview.innerHTML = `<span class="rcaf-placeholder">← 在左邊填寫，這裡會即時產出...</span>`;
+      return;
+    }
+    cmdPreview.textContent = buildClaudeMd();
+  }
+
+  cmdInputs.forEach(input => input.addEventListener("input", renderClaudeMd));
+  if (cmdGenerateBtn) cmdGenerateBtn.addEventListener("click", () => {
+    if (!cmdPreview) return;
+    cmdPreview.textContent = buildClaudeMd();
+  });
+  if (cmdCopyBtn) cmdCopyBtn.addEventListener("click", async () => {
+    const text = cmdPreview?.textContent || "";
+    if (!text || cmdPreview?.querySelector(".rcaf-placeholder")) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      const original = cmdCopyBtn.textContent;
+      cmdCopyBtn.textContent = "✅ 已複製";
+      setTimeout(() => { cmdCopyBtn.textContent = original; }, 1500);
+    } catch {
+      cmdCopyBtn.textContent = "❌ 複製失敗";
+    }
   });
 
   // Context Window Visualizer

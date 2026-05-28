@@ -2450,6 +2450,81 @@ pre code {
   margin-bottom: 1.5rem;
 }
 
+.selector-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.selector-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.selector-field label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.selector-field select {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.selector-field select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.selector-form .btn {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.selector-result {
+  margin-top: 0.5rem;
+}
+
+.calc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.calc-result-header {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+}
+
+.calc-result-amount {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  color: var(--yellow);
+  display: block;
+  line-height: 1;
+  margin: 0.5rem 0;
+}
+
+.calc-hint {
+  font-size: 0.7rem;
+  opacity: 0.65;
+}
+
+@media (max-width: 700px) {
+  .calc-grid { grid-template-columns: 1fr; }
+}
+
 .selector-option {
   border: 2px solid var(--ink);
   border-radius: var(--radius);
