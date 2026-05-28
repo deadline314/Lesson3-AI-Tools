@@ -168,6 +168,20 @@ function updateProgressIndicator() {
 }
 
 // ═══════ DYNAMIC TAB LOADING ═══════
+function executeInjectedScripts(panel) {
+  const scripts = panel.querySelectorAll("script");
+  scripts.forEach(oldScript => {
+    const newScript = document.createElement("script");
+    if (oldScript.src) {
+      newScript.src = oldScript.src;
+    } else {
+      newScript.textContent = oldScript.textContent;
+    }
+    if (oldScript.type) newScript.type = oldScript.type;
+    oldScript.parentNode.replaceChild(newScript, oldScript);
+  });
+}
+
 async function loadTabContent(tabId) {
   if (tabCache[tabId]) return;
   const panel = document.getElementById(tabId);
@@ -181,6 +195,7 @@ async function loadTabContent(tabId) {
     panel.innerHTML = await resp.text();
     tabCache[tabId] = true;
     initTab(tabId);
+    executeInjectedScripts(panel);
   } catch (err) {
     panel.innerHTML = `<div class="tab-loading"><span>載入失敗 (${err.message})</span></div>`;
   }
@@ -211,6 +226,7 @@ document.querySelectorAll(".tab-btn").forEach(tab => {
 document.addEventListener("click", e => {
   const trigger = e.target.closest(".accordion-trigger");
   if (!trigger) return;
+  if (trigger.hasAttribute("onclick")) return;
   const content = trigger.nextElementSibling;
   if (!content || !content.classList.contains("accordion-content")) return;
   const isOpen = content.classList.contains("open");
@@ -291,6 +307,8 @@ function initTab(tabId) {
     }
   });
   observeReveals(panel);
+  const hasInlineScript = panel.querySelector("script") !== null;
+  if (hasInlineScript) return;
   const initMap = { t0: initT0, t1: initT1, t2: initT2, t3: initT3, t4: initT4, t5: initT5, t6: initT6, t7: initT7 };
   if (initMap[tabId]) initMap[tabId](panel);
 }
@@ -656,16 +674,54 @@ function initT1(panel) {
   if (panel.dataset.init) return;
   panel.dataset.init = "1";
 
-  const quizContainer = panel.querySelector(".quiz-container");
-  if (quizContainer) initQuiz(quizContainer, SCENARIOS_T1, "t1_");
+  // Scenario Quiz (uses ID-based markup)
+  const scenarioBox = panel.querySelector("#scenarioBox");
+  if (scenarioBox) {
+    const promptEl = panel.querySelector("#scenarioPrompt");
+    const optsEl = panel.querySelector("#scenarioOptions");
+    const fbEl = panel.querySelector("#scenarioFeedback");
+    const counterEl = panel.querySelector("#scenarioCounter");
+    const nextBtn = panel.querySelector("#scenarioNext");
+    const prevBtn = panel.querySelector("#scenarioPrev");
+    let cur = 0;
+    function renderScenario() {
+      const s = SCENARIOS_T1[cur];
+      if (promptEl) promptEl.innerHTML = `<p style="margin-bottom:1rem;font-weight:600;">${s.prompt}</p>`;
+      if (fbEl) { fbEl.innerHTML = ""; fbEl.style.display = "none"; }
+      if (optsEl) {
+        optsEl.innerHTML = "";
+        s.options.forEach((opt, i) => {
+          const b = document.createElement("button");
+          b.className = "scenario-option";
+          b.textContent = opt.text;
+          b.onclick = () => {
+            optsEl.querySelectorAll(".scenario-option").forEach((el, j) => {
+              el.classList.add(s.options[j].correct ? "correct" : "wrong");
+              el.disabled = true;
+            });
+            if (fbEl) {
+              fbEl.innerHTML = `<span class="fb-label">${opt.correct ? "CORRECT" : "NOT QUITE"}</span> ${opt.fb}`;
+              fbEl.style.display = "block";
+            }
+            if (opt.correct) { progress.quizScores["t1_" + cur] = true; saveProgress(progress); }
+          };
+          optsEl.appendChild(b);
+        });
+      }
+      if (counterEl) counterEl.textContent = `${cur + 1} / ${SCENARIOS_T1.length}`;
+    }
+    if (nextBtn) nextBtn.onclick = () => { cur = (cur + 1) % SCENARIOS_T1.length; renderScenario(); };
+    if (prevBtn) prevBtn.onclick = () => { cur = (cur - 1 + SCENARIOS_T1.length) % SCENARIOS_T1.length; renderScenario(); };
+    renderScenario();
+  }
 
   panel.querySelectorAll(".prompt-tab").forEach(btn => {
     btn.onclick = () => {
       panel.querySelectorAll(".prompt-tab").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       const type = btn.dataset.prompt;
-      const input = panel.querySelector(".prompt-input");
-      const output = panel.querySelector(".prompt-output");
+      const input = panel.querySelector("#promptInput");
+      const output = panel.querySelector("#promptOutput");
       if (input) input.textContent = PROMPT_EXAMPLES[type].input;
       if (output) output.textContent = PROMPT_EXAMPLES[type].output;
     };
@@ -674,9 +730,9 @@ function initT1(panel) {
   if (firstPromptTab) firstPromptTab.click();
 
   let terminalRunning = false;
-  const termBody = panel.querySelector(".terminal-body");
-  const termPlayBtn = panel.querySelector(".terminal-play");
-  const termResetBtn = panel.querySelector(".terminal-reset");
+  const termBody = panel.querySelector("#terminalBody");
+  const termPlayBtn = panel.querySelector("#terminalPlay");
+  const termResetBtn = panel.querySelector("#terminalReset");
 
   async function playTerminal() {
     if (terminalRunning || !termBody) return;
@@ -700,8 +756,8 @@ function initT1(panel) {
   };
 
   let typingRunning = false;
-  const typingPlayBtn = panel.querySelector(".typing-play");
-  const typingCode = panel.querySelector(".typing-code");
+  const typingPlayBtn = panel.querySelector("#typingPlay");
+  const typingCode = panel.querySelector("#typingCode");
 
   async function playTyping() {
     if (typingRunning || !typingCode) return;
@@ -723,7 +779,7 @@ function initT1(panel) {
 
   if (typingPlayBtn) typingPlayBtn.onclick = playTyping;
 
-  // Match Game
+  // Match Game (HTML uses textContent of tool element for display)
   panel.querySelectorAll(".match-tool").forEach(tool => {
     tool.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", tool.dataset.tool); tool.style.opacity = "0.5"; });
     tool.addEventListener("dragend", () => { tool.style.opacity = ""; });
@@ -735,25 +791,36 @@ function initT1(panel) {
       e.preventDefault();
       drop.classList.remove("dragover");
       const toolId = e.dataTransfer.getData("text/plain");
-      drop.textContent = toolId;
+      const toolEl = panel.querySelector(`.match-tool[data-tool="${toolId}"]`);
+      drop.textContent = toolEl ? toolEl.textContent : toolId;
       drop.dataset.placed = toolId;
       drop.classList.add("filled");
-      const toolEl = panel.querySelector(`.match-tool[data-tool="${toolId}"]`);
       if (toolEl) toolEl.classList.add("placed");
     });
   });
 
-  const matchCheckBtn = panel.querySelector(".match-check");
-  const matchResetBtn = panel.querySelector(".match-reset");
-  const matchResult = panel.querySelector(".match-result");
+  const matchCheckBtn = panel.querySelector("#matchCheck");
+  const matchResetBtn = panel.querySelector("#matchReset");
+  const matchResult = panel.querySelector("#matchResult");
   if (matchCheckBtn) matchCheckBtn.onclick = () => {
+    const slots = panel.querySelectorAll(".match-slot");
     let correct = 0;
-    panel.querySelectorAll(".match-slot").forEach(slot => {
+    slots.forEach(slot => {
       const drop = slot.querySelector(".match-drop");
-      if (drop && drop.dataset.placed === slot.dataset.answer) { correct++; drop.style.borderColor = "var(--green)"; drop.style.background = "rgba(0,200,83,0.1)"; }
-      else if (drop && drop.dataset.placed) { drop.style.borderColor = "var(--accent)"; drop.style.background = "rgba(255,87,34,0.1)"; }
+      if (!drop) return;
+      if (drop.dataset.placed === slot.dataset.answer) {
+        correct++;
+        drop.style.borderColor = "var(--green)";
+        drop.style.background = "rgba(0,200,83,0.1)";
+      } else if (drop.dataset.placed) {
+        drop.style.borderColor = "var(--accent)";
+        drop.style.background = "rgba(255,87,34,0.1)";
+      }
     });
-    if (matchResult) { matchResult.className = `match-result show ${correct === 4 ? "correct" : "partial"}`; matchResult.textContent = correct === 4 ? "\u5168\u5c0d\uff01" : `${correct}/4 \u6b63\u78ba`; }
+    if (matchResult) {
+      matchResult.className = `match-result show ${correct === slots.length ? "correct" : "partial"}`;
+      matchResult.textContent = correct === slots.length ? "全對！" : `${correct}/${slots.length} 正確`;
+    }
   };
   if (matchResetBtn) matchResetBtn.onclick = () => {
     panel.querySelectorAll(".match-drop").forEach(d => { d.textContent = ""; d.dataset.placed = ""; d.classList.remove("filled"); d.style.borderColor = ""; d.style.background = ""; });
@@ -841,19 +908,83 @@ function initT1(panel) {
     }
   });
 
-  // Context Window Visualizer
-  const ctxSlider = panel.querySelector(".context-slider");
-  const ctxSegments = panel.querySelector(".context-segments");
-  if (ctxSlider && ctxSegments) {
-    ctxSlider.addEventListener("input", () => {
-      const val = parseInt(ctxSlider.value);
-      const system = Math.min(val * 0.1, 20);
-      const context = Math.min(val * 0.4, 60);
-      const output = val - system - context;
-      ctxSegments.innerHTML = `<div class="ctx-seg ctx-system" style="flex:${system}"><span>System ${system.toFixed(0)}%</span></div><div class="ctx-seg ctx-context" style="flex:${context}"><span>Context ${context.toFixed(0)}%</span></div><div class="ctx-seg ctx-output" style="flex:${output}"><span>Output ${output.toFixed(0)}%</span></div>`;
-    });
-    ctxSlider.dispatchEvent(new Event("input"));
+  // Context Window Visualizer (HTML uses #ctxSlider + segments + attention)
+  const ctxSlider = panel.querySelector("#ctxSlider");
+  const ctxPercent = panel.querySelector("#ctxPercent");
+  const ctxSystem = panel.querySelector("#ctxSystem");
+  const ctxCode = panel.querySelector("#ctxCode");
+  const ctxUser = panel.querySelector("#ctxUser");
+  const ctxEmpty = panel.querySelector("#ctxEmpty");
+  const ctxAttFill = panel.querySelector("#ctxAttentionFill");
+  const ctxAttVal = panel.querySelector("#ctxAttentionVal");
+  const ctxExplain = panel.querySelector("#ctxExplanation");
+  if (ctxSlider) {
+    function renderCtx() {
+      const fill = parseInt(ctxSlider.value) || 0;
+      if (ctxPercent) ctxPercent.textContent = fill + "%";
+      const system = 15;
+      const code = Math.min(fill * 0.4, 50);
+      const user = Math.max(0, fill - system - code);
+      const empty = Math.max(0, 100 - system - code - user);
+      if (ctxSystem) ctxSystem.style.width = system + "%";
+      if (ctxCode) ctxCode.style.width = code + "%";
+      if (ctxUser) ctxUser.style.width = user + "%";
+      if (ctxEmpty) ctxEmpty.style.width = empty + "%";
+      const attention = fill < 40 ? 90 : fill < 70 ? 75 : fill < 90 ? 55 : 30;
+      if (ctxAttFill) ctxAttFill.style.width = attention + "%";
+      if (ctxAttVal) ctxAttVal.textContent = attention + "%";
+      if (ctxExplain) {
+        if (fill < 40) ctxExplain.textContent = "Context 使用率低，AI 能完全專注在你的問題上。回答品質最高。";
+        else if (fill < 70) ctxExplain.textContent = "中等填充，仍在舒適區。AI 能平衡多個資訊來源。";
+        else if (fill < 90) ctxExplain.textContent = "Context 偏滿，AI 開始忽略中段細節（lost-in-the-middle 效應）。";
+        else ctxExplain.textContent = "幾乎塞滿，AI 注意力嚴重分散，容易忘記前面講過的事。建議精簡 context。";
+      }
+    }
+    ctxSlider.addEventListener("input", renderCtx);
+    renderCtx();
   }
+
+  // Claude Code Architecture Diagram
+  const archDetail = panel.querySelector("#ccArchDetail");
+  const archInfo = {
+    terminal: { title: "⌨️ Your Terminal", body: "你的終端機是入口。打 `claude` 進入互動模式，所有指令都從這裡發出。Claude Code 直接讀寫你的本機檔案，不用上傳到雲端。" },
+    brain: { title: "🧠 Claude Opus / Sonnet — The Brain", body: "推理核心。Opus 4.7 用在最複雜的架構決策；Sonnet 4.6 是日常主力，速度與智能平衡。它會持續循環：讀檔 → 思考 → 呼叫工具 → 評估結果。" },
+    "read-write": { title: "📁 Read / Write / Edit", body: "檔案操作能力。Read 讀任意檔；Write 建新檔；Edit 對既有檔做精準修改（基於 diff，不會誤砍其他段落）。每次寫入前會先問你（Normal 模式）。" },
+    bash: { title: "💻 Bash", body: "Claude Code 能跑任何 shell 指令——npm install、pytest、git commit 都行。配合測試指令做驗證迴圈，是 Agent 跟 Chatbot 最大的差別。" },
+    search: { title: "🔍 Grep / Glob", body: "ripgrep 快速搜尋全專案，Glob 用 pattern 找檔案路徑。比手動翻檔快幾百倍，是 Context Engineering 的核心工具。" },
+    web: { title: "🌐 Web Fetch / Search", body: "讀取網頁、文件、API spec。寫程式時遇到不熟的套件，能自己去查官方文件。" },
+    task: { title: "🔀 Sub-agent (Task)", body: "把大任務拆給多個獨立 sub-agent 平行處理，各自有獨立 context。適合『同時改三個獨立模組』這種場景。" },
+    mcp: { title: "🔌 MCP Connectors", body: "透過 Model Context Protocol 接到 Slack、Drive、Notion、自家 DB 等外部工具。一次設定，所有 MCP-aware 的 host 都能用。" },
+    fs: { title: "📂 File System / Git / Cloud", body: "最終產出落地的地方：改你本機檔案、commit 到 git、push 到 GitHub、或經由 Cloud Agents 在雲端跑。" }
+  };
+  panel.querySelectorAll(".cc-arch-node").forEach(node => {
+    node.addEventListener("click", () => {
+      panel.querySelectorAll(".cc-arch-node").forEach(n => n.classList.remove("active"));
+      node.classList.add("active");
+      const info = archInfo[node.dataset.arch];
+      if (archDetail && info) {
+        archDetail.innerHTML = `<h4 style="margin-bottom:0.5rem;">${info.title}</h4><p style="font-size:0.9rem;line-height:1.7;">${info.body}</p>`;
+      }
+    });
+  });
+
+  // Permission System Demo
+  const permResp = panel.querySelector("#permResponse");
+  const permModes = {
+    normal: { prompt: "Allow edit to src/api.py? [Y/n]", status: "⏸ 等待你的許可...", color: "var(--ink)" },
+    accept: { prompt: "Auto-accepting edit to src/api.py", status: "✓ 已自動套用", color: "var(--green)" },
+    auto: { prompt: "Auto-running: edit + bash + git", status: "⚡ 全自動執行中（高風險模式）", color: "var(--accent)" }
+  };
+  panel.querySelectorAll(".permission-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      panel.querySelectorAll(".permission-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const mode = permModes[btn.dataset.perm];
+      if (permResp && mode) {
+        permResp.innerHTML = `<span class="perm-prompt">${mode.prompt}</span><span class="perm-status" style="color:${mode.color};">${mode.status}</span>`;
+      }
+    });
+  });
 }
 
 // ═══════ T2: WORKFLOW ═══════
