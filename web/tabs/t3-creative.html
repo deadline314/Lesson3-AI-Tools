@@ -1,0 +1,408 @@
+<div class="panel-header">
+<span class="panel-num">Q3</span>
+<h2>AI 創作 — ComfyUI</h2>
+</div>
+
+<p class="intro">2026 年，視覺 AI 創作工具已從「打字生圖」進化到<span class="tip" data-tip-key="comfyui">節點式工作流</span>。ComfyUI 讓你像拼積木一樣組合模型、控制每一步細節——從文字到圖像、從草圖到精修，全部可視化、可重現、可分享。</p>
+
+<h3>ComfyUI vs Midjourney</h3>
+<table class="compare-table">
+<thead>
+<tr><th>特性</th><th>ComfyUI</th><th>Midjourney</th></tr>
+</thead>
+<tbody>
+<tr><td>費用</td><td>免費開源（需 GPU）</td><td>$10-60/月訂閱</td></tr>
+<tr><td>彈性</td><td>極高——任意組合節點</td><td>低——僅文字提示</td></tr>
+<tr><td>學習曲線</td><td>陡峭（需理解管線）</td><td>平緩（打字即出圖）</td></tr>
+<tr><td>可重現性</td><td>100%（workflow JSON）</td><td>部分（seed 可鎖）</td></tr>
+<tr><td>運行環境</td><td>本地 GPU / Cloud GPU</td><td>純雲端</td></tr>
+<tr><td>客製化</td><td>自訂節點、LoRA、ControlNet</td><td>僅 style 參數</td></tr>
+</tbody>
+</table>
+
+<h3>多模態模型：生成 vs 理解</h3>
+<div class="component-grid">
+<div class="component-card">
+<h4>🎨 圖像生成 (Image Generation)</h4>
+<p>從文字/草圖產生新圖片。代表：Stable Diffusion、DALL-E 3、Flux。</p>
+<div class="code-block">文字 → 潛空間噪聲 → 去噪 → 圖像</div>
+</div>
+<div class="component-card">
+<h4>👁️ 圖像理解 (Image Understanding)</h4>
+<p>分析既有圖片內容。代表：GPT-5 Vision、Claude Vision、LLaVA。</p>
+<div class="code-block">圖像 → 編碼器 → Token → LLM 推理 → 文字描述</div>
+</div>
+<div class="component-card">
+<h4>🔄 雙向多模態</h4>
+<p>同時能生成與理解。代表：Gemini 3、GPT-5 with DALL-E。</p>
+<div class="code-block">文字 ⟷ 圖像 ⟷ 影片 ⟷ 音訊</div>
+</div>
+</div>
+
+<h3>DAG（有向無環圖）概念</h3>
+<div id="dagDemo" class="highlight-box" style="padding:1.5rem;">
+<p><strong>咖啡類比：</strong>泡咖啡時，「磨豆」和「燒水」可以同時進行，但「沖泡」必須等兩者都完成。這就是 DAG——任務有方向、有依賴、但不會循環。</p>
+<div style="display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;margin:1.5rem 0;">
+<div class="dag-node" data-dag="grind" style="background:var(--yellow);color:#333;padding:.8rem 1.2rem;border-radius:var(--radius);cursor:pointer;font-weight:600;transition:var(--transition);">磨豆 ☕</div>
+<div class="dag-node" data-dag="boil" style="background:var(--blue);color:#fff;padding:.8rem 1.2rem;border-radius:var(--radius);cursor:pointer;font-weight:600;transition:var(--transition);">燒水 💧</div>
+<div style="font-size:2rem;">→</div>
+<div class="dag-node" data-dag="brew" style="background:var(--green);color:#fff;padding:.8rem 1.2rem;border-radius:var(--radius);cursor:pointer;font-weight:600;transition:var(--transition);">沖泡 ✨</div>
+</div>
+<p id="dagInfo" style="text-align:center;color:var(--ink-soft);min-height:1.5em;">點擊節點查看依賴關係</p>
+<p style="margin-top:1rem;"><strong>為什麼 ComfyUI 用 DAG？</strong> 每個節點是一個處理步驟，資料沿著箭頭單向流動。平行的分支可以同時計算，讓 GPU 利用率最大化；而且不會產生無限迴圈。</p>
+</div>
+
+<h3>Stable Diffusion 管線</h3>
+<div class="comfy-stage" style="background:#1a1a2e;border-radius:var(--radius);padding:2rem;color:#eee;">
+<div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;" id="pipelineNodes">
+<div class="pipeline-node" data-node="checkpoint" style="background:#2d2d44;border:2px solid var(--purple);border-radius:var(--radius);padding:1rem;cursor:pointer;min-width:140px;text-align:center;transition:var(--transition);">
+<div style="font-size:1.5rem;">📦</div>
+<div style="font-weight:600;color:var(--purple);">Load Checkpoint</div>
+<div style="font-size:.75rem;color:#aaa;">載入模型權重</div>
+</div>
+<div style="align-self:center;color:#666;">→</div>
+<div class="pipeline-node" data-node="clip" style="background:#2d2d44;border:2px solid var(--blue);border-radius:var(--radius);padding:1rem;cursor:pointer;min-width:140px;text-align:center;transition:var(--transition);">
+<div style="font-size:1.5rem;">📝</div>
+<div style="font-weight:600;color:var(--blue);">CLIP Encode</div>
+<div style="font-size:.75rem;color:#aaa;">文字→向量</div>
+</div>
+<div style="align-self:center;color:#666;">→</div>
+<div class="pipeline-node" data-node="latent" style="background:#2d2d44;border:2px solid var(--green);border-radius:var(--radius);padding:1rem;cursor:pointer;min-width:140px;text-align:center;transition:var(--transition);">
+<div style="font-size:1.5rem;">🔲</div>
+<div style="font-weight:600;color:var(--green);">Empty Latent</div>
+<div style="font-size:.75rem;color:#aaa;">建立噪聲畫布</div>
+</div>
+<div style="align-self:center;color:#666;">→</div>
+<div class="pipeline-node" data-node="ksampler" style="background:#2d2d44;border:2px solid var(--accent);border-radius:var(--radius);padding:1rem;cursor:pointer;min-width:140px;text-align:center;transition:var(--transition);">
+<div style="font-size:1.5rem;">🎲</div>
+<div style="font-weight:600;color:var(--accent);">KSampler</div>
+<div style="font-size:.75rem;color:#aaa;">去噪核心</div>
+</div>
+<div style="align-self:center;color:#666;">→</div>
+<div class="pipeline-node" data-node="vae" style="background:#2d2d44;border:2px solid var(--pink);border-radius:var(--radius);padding:1rem;cursor:pointer;min-width:140px;text-align:center;transition:var(--transition);">
+<div style="font-size:1.5rem;">🖼️</div>
+<div style="font-weight:600;color:var(--pink);">VAE Decode</div>
+<div style="font-size:.75rem;color:#aaa;">潛空間→像素</div>
+</div>
+</div>
+<p id="nodeDetail" style="margin-top:1.5rem;padding:1rem;background:#2d2d44;border-radius:var(--radius);min-height:3rem;color:#ccc;text-align:center;">點擊節點查看詳細說明</p>
+</div>
+
+<h3>Checkpoint 模型比較</h3>
+<table class="compare-table">
+<thead>
+<tr><th>模型</th><th>大小</th><th>風格</th><th>適用場景</th></tr>
+</thead>
+<tbody>
+<tr><td>SD 1.5</td><td>~2 GB</td><td>通用、社群資源最多</td><td>學習入門、LoRA 最豐富</td></tr>
+<tr><td>SDXL</td><td>~6.5 GB</td><td>高解析度、細節豐富</td><td>商業品質出圖</td></tr>
+<tr><td>Flux</td><td>~12 GB</td><td>極致真實感</td><td>攝影級人像、產品圖</td></tr>
+<tr><td>Pony Diffusion</td><td>~2 GB</td><td>動漫/插畫風</td><td>角色設計、同人創作</td></tr>
+</tbody>
+</table>
+
+<h3>潛空間壓縮</h3>
+<div id="latentDemo" class="highlight-box" style="padding:1.5rem;">
+<div style="display:flex;align-items:center;justify-content:center;gap:2rem;flex-wrap:wrap;margin:1rem 0;">
+<div style="text-align:center;">
+<div style="width:128px;height:128px;background:linear-gradient(135deg,#ff6b6b,#feca57,#48dbfb,#ff9ff3);border-radius:8px;margin:0 auto .5rem;"></div>
+<div style="font-weight:600;">原圖 512×512</div>
+<div style="font-size:.85rem;color:var(--ink-soft);">262,144 像素</div>
+</div>
+<div style="font-size:2rem;font-weight:bold;">→</div>
+<div style="text-align:center;">
+<div style="width:48px;height:48px;background:linear-gradient(135deg,#333,#666,#999,#333);border-radius:4px;margin:0 auto .5rem;border:2px solid var(--accent);"></div>
+<div style="font-weight:600;">潛空間 64×64×4</div>
+<div style="font-size:.85rem;color:var(--ink-soft);">16,384 值</div>
+</div>
+</div>
+<div style="text-align:center;margin:1rem 0;">
+<span style="font-size:1.5rem;font-weight:700;color:var(--accent);" id="compressCounter">16×</span> 壓縮率
+</div>
+<p>VAE 把高維度像素壓縮到低維度潛空間，讓擴散過程在小空間計算——速度快 16 倍，記憶體省 16 倍。解碼時再還原回像素。</p>
+</div>
+
+<h3>擴散過程視覺化</h3>
+<div id="diffusionViz" style="background:var(--paper-deep);border-radius:var(--radius);padding:1.5rem;">
+<div id="diffusionCanvas" style="width:100%;height:200px;border-radius:var(--radius);background:#333;position:relative;overflow:hidden;">
+<div id="diffusionLayer" style="position:absolute;inset:0;background:linear-gradient(45deg,#e74c3c,#3498db,#2ecc71,#f39c12);filter:blur(40px) grayscale(1);transition:filter 0.5s;"></div>
+<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,.5);" id="diffStepLabel">Step 0 / 30 — 純噪聲</div>
+</div>
+<div style="display:flex;align-items:center;gap:1rem;margin-top:1rem;">
+<button class="btn btn-primary" id="diffPlayBtn">▶ 播放</button>
+<input type="range" id="diffSlider" min="1" max="30" value="1" style="flex:1;">
+<span id="diffStepNum">1</span>/30
+</div>
+</div>
+
+<h3>CFG 強度控制</h3>
+<div id="cfgWidget" style="background:var(--paper-deep);border-radius:var(--radius);padding:1.5rem;">
+<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+<span style="font-weight:600;">CFG Scale:</span>
+<input type="range" id="cfgSlider" min="1" max="20" value="7" style="flex:1;">
+<span id="cfgValue" style="font-weight:700;font-size:1.2rem;min-width:2rem;text-align:center;">7</span>
+</div>
+<div style="height:24px;border-radius:12px;background:linear-gradient(to right,var(--blue),#9b59b6,var(--accent),#e74c3c);position:relative;margin-bottom:1rem;">
+<div id="cfgThumb" style="position:absolute;top:-4px;width:32px;height:32px;background:#fff;border-radius:50%;border:3px solid var(--accent);box-shadow:var(--shadow-sm);transition:left .2s;left:30%;"></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--ink-soft);margin-bottom:1rem;">
+<span>🎨 自由創意</span><span>⚖️ 平衡</span><span>📐 嚴格遵從</span>
+</div>
+<p id="cfgExplain" style="padding:1rem;background:var(--paper);border-radius:var(--radius);border-left:4px solid var(--accent);">CFG 7 是推薦起點——模型會遵循提示，同時保留創造性的細節。</p>
+</div>
+
+<h3>Seed 探索器</h3>
+<div id="seedExplorer" style="background:var(--paper-deep);border-radius:var(--radius);padding:1.5rem;">
+<p>相同 Seed = 相同結果。改變 Seed = 全新變化。這是<strong>可重現性</strong>的關鍵。</p>
+<div style="display:flex;gap:1.5rem;justify-content:center;align-items:center;flex-wrap:wrap;margin:1.5rem 0;">
+<div style="text-align:center;">
+<div id="seedBox1" style="width:120px;height:120px;border-radius:var(--radius);transition:background .5s;"></div>
+<div style="margin-top:.5rem;font-size:.85rem;" id="seedLabel1">Seed: 42</div>
+</div>
+<div style="text-align:center;">
+<div id="seedBox2" style="width:120px;height:120px;border-radius:var(--radius);transition:background .5s;"></div>
+<div style="margin-top:.5rem;font-size:.85rem;" id="seedLabel2">Seed: 42</div>
+</div>
+</div>
+<div style="display:flex;gap:1rem;justify-content:center;">
+<button class="btn btn-primary" id="seedRandomBtn">🎲 隨機 Seed</button>
+<button class="btn" id="seedLockBtn">🔒 鎖定 Seed</button>
+</div>
+<p id="seedStatus" style="text-align:center;margin-top:1rem;color:var(--ink-soft);">兩個 Seed 相同——輸出一致</p>
+</div>
+
+<h3>進階節點</h3>
+<div class="accordion" data-accordion>
+<button class="accordion-trigger">LoRA — 輕量風格外掛</button>
+<div class="accordion-content">
+<p>LoRA（Low-Rank Adaptation）是一種只有幾十 MB 的微調權重，疊加到基礎模型上就能改變風格。好處是不用重新訓練整個模型。</p>
+<ul>
+<li>大小：通常 10-200 MB</li>
+<li>疊加：可同時使用多個 LoRA，用權重控制強度</li>
+<li>來源：CivitAI 有數萬個社群 LoRA</li>
+</ul>
+<div class="code-block">Load LoRA → strength: 0.7 → 融合到 Checkpoint</div>
+</div>
+</div>
+<div class="accordion" data-accordion>
+<button class="accordion-trigger">ControlNet — 姿態/深度/邊緣控制</button>
+<div class="accordion-content">
+<p>ControlNet 讓你用額外的「引導圖」控制生成結構——人體骨架、深度圖、邊緣線稿都可以當輸入。</p>
+<ul>
+<li>OpenPose：偵測人體姿態，讓角色擺出指定動作</li>
+<li>Depth：用深度圖控制前後景關係</li>
+<li>Canny：用邊緣線稿控制物件輪廓</li>
+</ul>
+<div class="code-block">參考圖 → Preprocessor → ControlNet Apply → KSampler</div>
+</div>
+</div>
+<div class="accordion" data-accordion>
+<button class="accordion-trigger">IP-Adapter — 圖像作為風格提示</button>
+<div class="accordion-content">
+<p>IP-Adapter 用一張圖片取代文字來描述「我要的風格」，讓生成結果繼承參考圖的色調、構圖和氛圍。</p>
+<ul>
+<li>適合難以用文字描述的風格</li>
+<li>可與文字提示混合使用</li>
+<li>權重可調整影響力 (0-1)</li>
+</ul>
+<div class="code-block">參考圖 → IP-Adapter Encoder → 注入到 KSampler</div>
+</div>
+</div>
+<div class="accordion" data-accordion>
+<button class="accordion-trigger">Upscale — ESRGAN 放大</button>
+<div class="accordion-content">
+<p>生圖後解析度不夠？ESRGAN 系列模型可以將圖片放大 2-4 倍，同時補充細節。</p>
+<ul>
+<li>RealESRGAN：真實照片放大首選</li>
+<li>4x-UltraSharp：銳利細節最佳化</li>
+<li>可搭配 KSampler 做「高清修復」(Hires Fix)</li>
+</ul>
+<div class="code-block">512×512 → Upscale Model → 2048×2048（4× 放大）</div>
+</div>
+</div>
+
+<h3>管線排序挑戰</h3>
+<div id="pipelineQuiz" class="quiz-box" style="padding:1.5rem;">
+<p>把以下 5 個節點排成正確的執行順序：</p>
+<div id="quizNodes" style="display:flex;flex-wrap:wrap;gap:.75rem;margin:1.5rem 0;justify-content:center;"></div>
+<div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;">
+<button class="btn btn-primary" id="quizCheckBtn">✓ 檢查答案</button>
+<button class="btn" id="quizResetBtn">↺ 重置</button>
+</div>
+<p id="quizResult" style="text-align:center;margin-top:1rem;font-weight:600;min-height:1.5em;"></p>
+</div>
+
+<h3>Prompt 解剖學</h3>
+<div id="promptAnatomy" style="background:var(--paper-deep);border-radius:var(--radius);padding:1.5rem;">
+<p>一個好的圖像 Prompt 包含四個部分：</p>
+<div style="background:#1a1a2e;border-radius:var(--radius);padding:1.5rem;margin:1rem 0;font-family:monospace;line-height:2;">
+<span class="prompt-part" data-part="subject" style="background:rgba(41,98,255,.2);border-bottom:2px solid var(--blue);padding:2px 4px;cursor:pointer;">a young woman sitting in a cafe</span><span>, </span>
+<span class="prompt-part" data-part="style" style="background:rgba(0,200,83,.2);border-bottom:2px solid var(--green);padding:2px 4px;cursor:pointer;">oil painting style, impressionist</span><span>, </span>
+<span class="prompt-part" data-part="quality" style="background:rgba(251,192,45,.2);border-bottom:2px solid var(--yellow);padding:2px 4px;cursor:pointer;">masterpiece, best quality, 8k</span>
+</div>
+<div style="background:#1a1a2e;border-radius:var(--radius);padding:1rem;margin:1rem 0;font-family:monospace;">
+<span style="color:var(--accent);font-weight:600;">Negative: </span>
+<span class="prompt-part" data-part="negative" style="background:rgba(233,30,99,.2);border-bottom:2px solid var(--pink);padding:2px 4px;cursor:pointer;">blurry, low quality, deformed hands, extra fingers</span>
+</div>
+<p id="promptExplain" style="padding:1rem;background:var(--paper);border-radius:var(--radius);margin-top:1rem;min-height:2.5em;color:var(--ink-soft);">滑鼠移到各部分查看說明</p>
+<div style="margin-top:1.5rem;">
+<h4>Good vs Bad Prompt</h4>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.75rem;">
+<div style="padding:1rem;background:rgba(0,200,83,.1);border:1px solid var(--green);border-radius:var(--radius);">
+<div style="font-weight:600;color:var(--green);margin-bottom:.5rem;">✓ Good</div>
+<code style="font-size:.8rem;">a corgi puppy playing in autumn leaves, soft golden hour lighting, shallow depth of field, 4k photo</code>
+</div>
+<div style="padding:1rem;background:rgba(233,30,99,.1);border:1px solid var(--pink);border-radius:var(--radius);">
+<div style="font-weight:600;color:var(--pink);margin-bottom:.5rem;">✗ Bad</div>
+<code style="font-size:.8rem;">dog</code>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+(function(){
+  const dagNodes = document.querySelectorAll('.dag-node');
+  const dagInfo = document.getElementById('dagInfo');
+  const dagMessages = {
+    grind: '「磨豆」可以和「燒水」平行執行——無依賴關係',
+    boil: '「燒水」可以和「磨豆」平行執行——無依賴關係',
+    brew: '「沖泡」必須等待「磨豆」和「燒水」都完成——有兩個上游依賴'
+  };
+  dagNodes.forEach(n => {
+    n.addEventListener('click', () => {
+      dagNodes.forEach(d => d.style.transform = 'scale(1)');
+      n.style.transform = 'scale(1.15)';
+      dagInfo.textContent = dagMessages[n.dataset.dag] || '';
+    });
+  });
+
+  const nodeDetails = {
+    checkpoint: 'Load Checkpoint：載入完整模型權重（U-Net + CLIP + VAE），是整條管線的基礎。不同 checkpoint 決定畫風和能力。',
+    clip: 'CLIP Encode：將你的文字提示轉為 768/1024 維向量，讓模型「看懂」你想畫什麼。正面和負面提示分開編碼。',
+    latent: 'Empty Latent Image：建立指定尺寸的純噪聲張量（如 64×64×4），作為去噪的起點畫布。',
+    ksampler: 'KSampler：核心去噪迴圈。每一步讓模型預測噪聲並扣除，逐漸從亂數浮現圖像。可調 steps、CFG、sampler 算法。',
+    vae: 'VAE Decode：將潛空間的 64×64×4 張量解碼回 512×512×3 像素圖像，完成最終輸出。'
+  };
+  document.querySelectorAll('.pipeline-node').forEach(n => {
+    n.addEventListener('click', () => {
+      document.querySelectorAll('.pipeline-node').forEach(p => p.style.transform = 'scale(1)');
+      n.style.transform = 'scale(1.08)';
+      document.getElementById('nodeDetail').textContent = nodeDetails[n.dataset.node] || '';
+    });
+  });
+
+  let diffStep = 1, diffPlaying = false, diffTimer = null;
+  const diffSlider = document.getElementById('diffSlider');
+  const diffLayer = document.getElementById('diffusionLayer');
+  const diffLabel = document.getElementById('diffStepLabel');
+  const diffNum = document.getElementById('diffStepNum');
+  function updateDiff(step) {
+    diffStep = step;
+    const blur = Math.max(0, 40 - (step / 30) * 40);
+    const gray = Math.max(0, 1 - step / 30);
+    diffLayer.style.filter = `blur(${blur}px) grayscale(${gray})`;
+    diffSlider.value = step;
+    diffNum.textContent = step;
+    const labels = step < 5 ? '純噪聲' : step < 15 ? '輪廓浮現' : step < 25 ? '細節豐富' : '接近完成';
+    diffLabel.textContent = `Step ${step} / 30 — ${labels}`;
+  }
+  diffSlider.addEventListener('input', e => { diffPlaying = false; clearInterval(diffTimer); updateDiff(+e.target.value); });
+  document.getElementById('diffPlayBtn').addEventListener('click', () => {
+    if (diffPlaying) { diffPlaying = false; clearInterval(diffTimer); return; }
+    diffPlaying = true; diffStep = 1;
+    diffTimer = setInterval(() => { if (diffStep >= 30) { diffPlaying = false; clearInterval(diffTimer); return; } updateDiff(++diffStep); }, 150);
+  });
+  updateDiff(1);
+
+  const cfgSlider = document.getElementById('cfgSlider');
+  const cfgValue = document.getElementById('cfgValue');
+  const cfgThumb = document.getElementById('cfgThumb');
+  const cfgExplain = document.getElementById('cfgExplain');
+  const cfgTexts = {
+    low: 'CFG 1-4：模型自由發揮，結果可能偏離提示但更有創意和驚喜感。',
+    mid: 'CFG 5-9：推薦範圍。模型遵循提示的同時保留自然的細節變化。',
+    high: 'CFG 10-15：嚴格遵從提示，細節可能變得僵硬或過飽和。',
+    extreme: 'CFG 16-20：過度引導，容易產生色彩爆裂、雜訊和失真。'
+  };
+  cfgSlider.addEventListener('input', e => {
+    const v = +e.target.value;
+    cfgValue.textContent = v;
+    cfgThumb.style.left = ((v - 1) / 19 * 100) + '%';
+    const key = v <= 4 ? 'low' : v <= 9 ? 'mid' : v <= 15 ? 'high' : 'extreme';
+    cfgExplain.textContent = cfgTexts[key];
+  });
+  cfgThumb.style.left = '31.5%';
+
+  let seedLocked = false, currentSeed = 42;
+  function seedToGradient(seed) {
+    const h1 = (seed * 137) % 360, h2 = (seed * 251) % 360, h3 = (seed * 43) % 360;
+    return `linear-gradient(${seed % 180}deg, hsl(${h1},70%,50%), hsl(${h2},60%,45%), hsl(${h3},80%,55%))`;
+  }
+  function updateSeeds(s1, s2) {
+    document.getElementById('seedBox1').style.background = seedToGradient(s1);
+    document.getElementById('seedBox2').style.background = seedToGradient(s2);
+    document.getElementById('seedLabel1').textContent = 'Seed: ' + s1;
+    document.getElementById('seedLabel2').textContent = 'Seed: ' + s2;
+    const same = s1 === s2;
+    document.getElementById('seedStatus').textContent = same ? '兩個 Seed 相同——輸出一致' : '不同 Seed——輸出完全不同';
+  }
+  updateSeeds(42, 42);
+  document.getElementById('seedRandomBtn').addEventListener('click', () => {
+    const s1 = Math.floor(Math.random() * 99999);
+    const s2 = seedLocked ? currentSeed : Math.floor(Math.random() * 99999);
+    currentSeed = s1;
+    updateSeeds(s1, s2);
+  });
+  document.getElementById('seedLockBtn').addEventListener('click', () => {
+    seedLocked = !seedLocked;
+    document.getElementById('seedLockBtn').textContent = seedLocked ? '🔓 解鎖 Seed' : '🔒 鎖定 Seed';
+    if (seedLocked) updateSeeds(currentSeed, currentSeed);
+  });
+
+  const correctOrder = ['Load Checkpoint', 'CLIP Encode', 'Empty Latent', 'KSampler', 'VAE Decode'];
+  let quizOrder = [...correctOrder].sort(() => Math.random() - 0.5);
+  const quizContainer = document.getElementById('quizNodes');
+  function renderQuiz() {
+    quizContainer.innerHTML = '';
+    quizOrder.forEach((name, i) => {
+      const el = document.createElement('div');
+      el.textContent = (i + 1) + '. ' + name;
+      el.style.cssText = 'padding:.6rem 1rem;background:var(--paper);border:2px solid var(--ink-soft);border-radius:var(--radius);cursor:pointer;user-select:none;transition:var(--transition);';
+      el.addEventListener('click', () => {
+        const next = (i + 1) % quizOrder.length;
+        [quizOrder[i], quizOrder[next]] = [quizOrder[next], quizOrder[i]];
+        renderQuiz();
+      });
+      quizContainer.appendChild(el);
+    });
+  }
+  renderQuiz();
+  document.getElementById('quizCheckBtn').addEventListener('click', () => {
+    const correct = quizOrder.every((n, i) => n === correctOrder[i]);
+    const el = document.getElementById('quizResult');
+    el.textContent = correct ? '✓ 完全正確！這就是標準 Stable Diffusion 管線順序。' : '✗ 順序不對——提示：從載入模型開始，最後解碼輸出。';
+    el.style.color = correct ? 'var(--green)' : 'var(--accent)';
+  });
+  document.getElementById('quizResetBtn').addEventListener('click', () => {
+    quizOrder = [...correctOrder].sort(() => Math.random() - 0.5);
+    renderQuiz();
+    document.getElementById('quizResult').textContent = '';
+  });
+
+  const promptExplains = {
+    subject: '主體 (Subject)：描述畫面中的主要對象、動作和場景。越具體越好。',
+    style: '風格 (Style)：指定藝術風格、媒材、參考畫家。決定視覺呈現方式。',
+    quality: '品質 (Quality)：品質提升詞彙，告訴模型你要高品質輸出。',
+    negative: '負面提示 (Negative)：列出不想出現的元素，減少常見瑕疵。'
+  };
+  document.querySelectorAll('.prompt-part').forEach(p => {
+    p.addEventListener('mouseenter', () => {
+      document.getElementById('promptExplain').textContent = promptExplains[p.dataset.part] || '';
+    });
+    p.addEventListener('mouseleave', () => {
+      document.getElementById('promptExplain').textContent = '滑鼠移到各部分查看說明';
+    });
+  });
+})();
+</script>

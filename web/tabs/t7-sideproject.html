@@ -1,0 +1,416 @@
+<div class="panel-header">
+<span class="panel-num">⑦</span>
+<h2>Side Project</h2>
+</div>
+
+<p class="intro">學完工具和方法論，最後一步：<strong>做出來</strong>。Side Project 是你把所學變成作品的機會。不用大、不用完美——能跑、能展示、能說出為什麼這樣做，就夠了。</p>
+
+<!-- Project Idea Spinner -->
+<div class="highlight-box reveal" id="ideaSpinner">
+<h4>點子產生器 🎰</h4>
+<p>按下按鈕，隨機組合出一個 Side Project 靈感：</p>
+<div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0.5rem;align-items:center;margin:1.5rem 0;text-align:center;">
+<div style="border:3px solid var(--ink);padding:1rem;min-height:80px;display:flex;align-items:center;justify-content:center;font-weight:700;" id="spinPain">痛點</div>
+<span style="font-size:1.5rem;font-weight:700;">+</span>
+<div style="border:3px solid var(--ink);padding:1rem;min-height:80px;display:flex;align-items:center;justify-content:center;font-weight:700;" id="spinTool">工具</div>
+<span style="font-size:1.5rem;font-weight:700;">=</span>
+<div style="border:3px solid var(--accent);padding:1rem;min-height:80px;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);" id="spinIdea">點子</div>
+</div>
+<button class="btn btn-primary" onclick="spinIdea()" style="display:block;margin:0 auto;">🎰 轉一次</button>
+</div>
+
+<!-- Guided Questions -->
+<div class="accordion">
+<div class="accordion-trigger">引導問題 — 找到你的題目</div>
+<div class="accordion-content">
+<ol class="step-list">
+<li><strong>你日常有什麼重複且無聊的事？</strong><br>→ 自動化候選（n8n workflow）</li>
+<li><strong>你最近在學什麼，希望有工具幫你？</strong><br>→ AI 輔助學習工具候選</li>
+<li><strong>你想給誰看這個作品？</strong><br>→ 面試官：注重品質 / 朋友：注重趣味 / 自己：注重實用</li>
+<li><strong>你有沒有曾經想過「要是有這個就好了」？</strong><br>→ 最好的題目來源</li>
+<li><strong>你最常花時間在哪個平台？</strong><br>→ 針對那個平台做工具最有動力做完</li>
+</ol>
+</div>
+</div>
+
+<!-- Good vs Bad Topics -->
+<div class="accordion">
+<div class="accordion-trigger">好題目 vs 壞題目（含更多範例）</div>
+<div class="accordion-content">
+<table class="compare-table">
+<thead><tr><th>壞題目</th><th>問題</th><th>改良版</th></tr></thead>
+<tbody>
+<tr><td>做一個 ChatGPT</td><td>太大、無差異化</td><td>做一個只回答 Python 問題的 CLI 助手</td></tr>
+<tr><td>AI 幫我寫完整 App</td><td>沒學習成分</td><td>用 AI 輔助做一個 Todo App，記錄過程</td></tr>
+<tr><td>做完整 SaaS</td><td>一週做不完</td><td>做 SaaS 的一個核心功能 MVP</td></tr>
+<tr><td>用所有工具</td><td>什麼都碰=都不深</td><td>精通一個工具，做出一個完整 demo</td></tr>
+<tr><td>做社群平台</td><td>範圍過大</td><td>做一個 Markdown blog CLI 工具</td></tr>
+<tr><td>做推薦演算法</td><td>需大量數據</td><td>做一個基於 tag 的內容篩選器</td></tr>
+</tbody>
+</table>
+<h4>好題目的四個特徵</h4>
+<ul class="feature-list">
+<li>一句話能說清楚</li>
+<li>一週內能 MVP</li>
+<li>用到本課工具</li>
+<li>解決真實痛點</li>
+</ul>
+</div>
+</div>
+
+<!-- Shrink Your Idea -->
+<div class="accordion">
+<div class="accordion-trigger">把題目縮小的方法論</div>
+<div class="accordion-content">
+<p>方法：找到核心價值 → 砍掉所有「nice to have」→ 限制一週。</p>
+<table class="compare-table">
+<thead><tr><th>原始想法</th><th>MVP 版本</th><th>工具</th><th>天數</th></tr></thead>
+<tbody>
+<tr><td>做社群平台</td><td>Markdown 個人 blog CLI</td><td>Claude Code</td><td>3</td></tr>
+<tr><td>做電商網站</td><td>自動比價通知 bot</td><td>n8n + AI Agent</td><td>4</td></tr>
+<tr><td>做繪圖 AI</td><td>一鍵產出 IG 貼文圖</td><td>ComfyUI workflow</td><td>2</td></tr>
+<tr><td>做 AI 助理</td><td>每日新聞摘要 LINE bot</td><td>n8n + LLM</td><td>5</td></tr>
+<tr><td>做筆記 App</td><td>語音轉文字+自動分類 CLI</td><td>Claude Code + Whisper</td><td>3</td></tr>
+<tr><td>做專案管理工具</td><td>GitHub Issues 週報產生器</td><td>n8n + MCP</td><td>2</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- MVP Scope Cutter -->
+<div class="highlight-box reveal" id="scopeCutter">
+<h4>MVP 範圍切割器</h4>
+<p>選一個大想法，逐步砍掉功能直到變成一週能完成的 MVP：</p>
+<select id="scopeSelect" style="width:100%;padding:0.5rem;border:2px solid var(--ink);font-size:0.85rem;margin:0.75rem 0;" onchange="showScope()">
+<option value="">— 選擇一個想法 —</option>
+<option value="social">社群 App</option>
+<option value="store">電商平台</option>
+<option value="ai-tutor">AI 家教</option>
+</select>
+<div id="scopeResult" style="display:none;"></div>
+</div>
+
+<!-- Demo Flow -->
+<div class="accordion">
+<div class="accordion-trigger">Demo 七步驟</div>
+<div class="accordion-content">
+<ol class="step-list">
+<li><strong>Hook</strong> — 一句話說你做了什麼、解決什麼問題（15 秒）</li>
+<li><strong>Pain</strong> — 展示沒有你的工具時有多痛苦（30 秒）</li>
+<li><strong>Demo</strong> — Live 操作你的成品（90 秒）</li>
+<li><strong>How</strong> — 用了什麼工具、怎麼做的（45 秒）</li>
+<li><strong>Learnings</strong> — 遇到什麼問題、怎麼解決（30 秒）</li>
+<li><strong>Next</strong> — 如果有更多時間會做什麼（15 秒）</li>
+<li><strong>Q&A</strong> — 回答問題（剩餘時間）</li>
+</ol>
+</div>
+</div>
+
+<!-- Example Gallery -->
+<div class="tool-grid reveal" id="exampleGallery">
+<div class="tool-card">
+<div class="tool-tag">n8n · LINE API</div>
+<h3 class="tool-name">每日摘要 Bot</h3>
+<p class="tool-desc">每天早上自動抓新聞 → AI 摘要 → 推送到 LINE</p>
+<ul class="feature-list"><li>n8n</li><li>Claude API</li><li>LINE Messaging</li></ul>
+</div>
+<div class="tool-card">
+<div class="tool-tag">Claude Code · CLI</div>
+<h3 class="tool-name">Git Commit 美化器</h3>
+<p class="tool-desc">分析 git diff → 自動產生語意化 commit message</p>
+<ul class="feature-list"><li>Claude Code</li><li>Git hooks</li><li>Shell script</li></ul>
+</div>
+<div class="tool-card">
+<div class="tool-tag">ComfyUI · Workflow</div>
+<h3 class="tool-name">IG 貼文產生器</h3>
+<p class="tool-desc">輸入主題 → 自動產圖 + 排版 + 加文字，批次出圖</p>
+<ul class="feature-list"><li>ComfyUI</li><li>SDXL</li><li>ControlNet</li></ul>
+</div>
+<div class="tool-card">
+<div class="tool-tag">Cursor · Web</div>
+<h3 class="tool-name">個人 Portfolio</h3>
+<p class="tool-desc">用 Cursor Agent 從零建一個部署到 Vercel 的作品集網站</p>
+<ul class="feature-list"><li>Cursor</li><li>Next.js</li><li>Vercel</li></ul>
+</div>
+<div class="tool-card">
+<div class="tool-tag">n8n · MCP · GitHub</div>
+<h3 class="tool-name">PR Review Bot</h3>
+<p class="tool-desc">新 PR 開啟 → AI 自動 review → 留言建議</p>
+<ul class="feature-list"><li>n8n</li><li>GitHub MCP</li><li>Claude API</li></ul>
+</div>
+<div class="tool-card">
+<div class="tool-tag">Claude Code · Python</div>
+<h3 class="tool-name">PDF 問答助手</h3>
+<p class="tool-desc">上傳 PDF → 向量化 → 用自然語言問問題得到答案</p>
+<ul class="feature-list"><li>Claude Code</li><li>RAG</li><li>ChromaDB</li></ul>
+</div>
+</div>
+
+<!-- Week Planner -->
+<div class="highlight-box reveal" id="weekPlanner">
+<h4>一週計畫表</h4>
+<p>把你的任務拖進每一天，規劃你的 Side Project 進度：</p>
+<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:0.25rem;margin-top:1rem;" id="plannerGrid">
+<div class="planner-day" style="border:2px solid var(--ink);padding:0.5rem;min-height:100px;font-size:0.75rem;">
+<strong style="color:var(--accent);">Day 1</strong><br><span style="opacity:0.6;">規劃+設定</span>
+<div class="planner-slot" data-day="1"></div>
+</div>
+<div class="planner-day" style="border:2px solid var(--ink);padding:0.5rem;min-height:100px;font-size:0.75rem;">
+<strong style="color:var(--accent);">Day 2</strong><br><span style="opacity:0.6;">核心功能</span>
+<div class="planner-slot" data-day="2"></div>
+</div>
+<div class="planner-day" style="border:2px solid var(--ink);padding:0.5rem;min-height:100px;font-size:0.75rem;">
+<strong style="color:var(--accent);">Day 3</strong><br><span style="opacity:0.6;">核心功能</span>
+<div class="planner-slot" data-day="3"></div>
+</div>
+<div class="planner-day" style="border:2px solid var(--ink);padding:0.5rem;min-height:100px;font-size:0.75rem;">
+<strong style="color:var(--accent);">Day 4</strong><br><span style="opacity:0.6;">串接+整合</span>
+<div class="planner-slot" data-day="4"></div>
+</div>
+<div class="planner-day" style="border:2px solid var(--ink);padding:0.5rem;min-height:100px;font-size:0.75rem;">
+<strong style="color:var(--accent);">Day 5</strong><br><span style="opacity:0.6;">UI+測試</span>
+<div class="planner-slot" data-day="5"></div>
+</div>
+<div class="planner-day" style="border:2px solid var(--ink);padding:0.5rem;min-height:100px;font-size:0.75rem;">
+<strong style="color:var(--accent);">Day 6</strong><br><span style="opacity:0.6;">部署+文件</span>
+<div class="planner-slot" data-day="6"></div>
+</div>
+<div class="planner-day" style="border:2px solid var(--ink);padding:0.5rem;min-height:100px;font-size:0.75rem;">
+<strong style="color:var(--accent);">Day 7</strong><br><span style="opacity:0.6;">Demo 準備</span>
+<div class="planner-slot" data-day="7"></div>
+</div>
+</div>
+</div>
+
+<!-- Presentation Timer -->
+<div class="highlight-box reveal" id="presTimer">
+<h4>Demo 練習計時器</h4>
+<p>練習你的 5 分鐘 presentation，計時器幫你控制節奏：</p>
+<div style="text-align:center;margin:1.5rem 0;">
+<div id="timerDisplay" style="font-family:Bebas Neue,sans-serif;font-size:4rem;color:var(--ink);">5:00</div>
+<div id="timerPhase" style="font-size:0.85rem;color:var(--accent);font-weight:700;margin-top:0.5rem;">準備開始</div>
+<div style="margin-top:1rem;display:flex;gap:0.5rem;justify-content:center;">
+<button class="btn btn-primary" id="timerStartBtn" onclick="toggleTimer()">▶ 開始</button>
+<button class="btn" onclick="resetTimer()">↺ 重置</button>
+</div>
+</div>
+<div style="font-size:0.75rem;opacity:0.7;display:grid;grid-template-columns:repeat(6,1fr);text-align:center;gap:0.25rem;">
+<span>0:00-0:15<br>Hook</span>
+<span>0:15-0:45<br>Pain</span>
+<span>0:45-2:15<br>Demo</span>
+<span>2:15-3:00<br>How</span>
+<span>3:00-3:30<br>Learn</span>
+<span>3:30-5:00<br>Q&A</span>
+</div>
+</div>
+
+<!-- Homework Checklist -->
+<div class="highlight-box reveal" id="hwChecklist">
+<h4>作業檢查表</h4>
+<p>完成每項後打勾，進度會自動存到瀏覽器：</p>
+<div id="checklistItems" style="margin-top:1rem;">
+<label class="checklist-item" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid var(--grid);cursor:pointer;">
+<input type="checkbox" class="hw-check" data-key="hw-repo" onchange="saveChecklist()"> 建立 GitHub public repo
+</label>
+<label class="checklist-item" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid var(--grid);cursor:pointer;">
+<input type="checkbox" class="hw-check" data-key="hw-readme" onchange="saveChecklist()"> 撰寫 README（做什麼/為什麼/怎麼跑）
+</label>
+<label class="checklist-item" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid var(--grid);cursor:pointer;">
+<input type="checkbox" class="hw-check" data-key="hw-tool" onchange="saveChecklist()"> 使用至少一個本課工具
+</label>
+<label class="checklist-item" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid var(--grid);cursor:pointer;">
+<input type="checkbox" class="hw-check" data-key="hw-run" onchange="saveChecklist()"> 成果可運行（網頁/CLI/Bot/workflow）
+</label>
+<label class="checklist-item" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid var(--grid);cursor:pointer;">
+<input type="checkbox" class="hw-check" data-key="hw-demo" onchange="saveChecklist()"> 準備 3 分鐘 demo（影片或 live）
+</label>
+<label class="checklist-item" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid var(--grid);cursor:pointer;">
+<input type="checkbox" class="hw-check" data-key="hw-process" onchange="saveChecklist()"> 說明 AI 使用流程
+</label>
+<label class="checklist-item" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid var(--grid);cursor:pointer;">
+<input type="checkbox" class="hw-check" data-key="hw-problem" onchange="saveChecklist()"> 記錄遇到的問題和解法
+</label>
+<label class="checklist-item" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;cursor:pointer;">
+<input type="checkbox" class="hw-check" data-key="hw-deploy" onchange="saveChecklist()"> [Bonus] 部署到公開網址
+</label>
+</div>
+<div style="margin-top:1rem;font-family:JetBrains Mono,monospace;font-size:0.85rem;">
+進度：<span id="checkProgress">0</span> / 8 完成
+<div style="height:6px;border:1.5px solid var(--ink);margin-top:0.5rem;"><div id="checkBar" style="height:100%;width:0%;background:var(--green);transition:width 0.3s;"></div></div>
+</div>
+</div>
+
+<!-- Homework Section -->
+<div class="homework-section">
+<h3 class="homework-title">HOMEWORK SPEC</h3>
+<div class="homework-spec">
+<div class="spec-card">
+<h5>DELIVER</h5>
+<ul>
+<li>GitHub repo link</li>
+<li>README.md（含安裝/使用說明）</li>
+<li>可運行的成果物</li>
+<li>PROCESS.md（AI 使用紀錄）</li>
+</ul>
+</div>
+<div class="spec-card">
+<h5>PRESENT</h5>
+<ul>
+<li>3-5 分鐘 demo</li>
+<li>展示 AI 工具使用流程</li>
+<li>分享踩坑經驗和解法</li>
+<li>回答同學提問</li>
+</ul>
+</div>
+<div class="spec-card">
+<h5>BONUS</h5>
+<ul>
+<li>部署到公開網址</li>
+<li>組合兩種以上工具</li>
+<li>有自動化測試</li>
+<li>有 CI/CD pipeline</li>
+</ul>
+</div>
+</div>
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--ink-soft);font-weight:600;">評分重點不是程式碼量，是你能不能展示「有效使用 AI 工具的過程」。</p>
+</div>
+
+<script>
+(function(){
+  // Idea Spinner
+  const pains=['每天手動整理 email','讀一堆新聞找重點','寫週報花一小時','社群貼文要想文案','面試前要整理履歷','debug 花太多時間','學新框架要爬一堆文件','客戶問題重複回答'];
+  const tools=['n8n workflow','Claude Code CLI','ComfyUI','Cursor Agent','MCP Server','RAG + Vector DB'];
+  const platforms=['LINE Bot','Discord Bot','CLI 工具','Chrome Extension','Web App','Slack App'];
+  window.spinIdea = function(){
+    const pain=pains[Math.floor(Math.random()*pains.length)];
+    const tool=tools[Math.floor(Math.random()*tools.length)];
+    const platform=platforms[Math.floor(Math.random()*platforms.length)];
+    document.getElementById('spinPain').textContent=pain;
+    document.getElementById('spinTool').textContent=tool;
+    const ideas={
+      'n8n workflow':'自動化 '+pain.replace('每天手動','').replace('花太多時間','')+'的 workflow',
+      'Claude Code CLI':'用 CLI 一鍵解決「'+pain+'」',
+      'ComfyUI':'批次產出解決「'+pain+'」的圖像',
+      'Cursor Agent':'用 Agent 自動'+pain.replace('每天手動','').replace('花太多時間',''),
+      'MCP Server':'建一個'+platform+'連接你的資料來源',
+      'RAG + Vector DB':'建一個能回答「'+pain.replace('讀一堆','').replace('要爬一堆','')+'」的 QA 系統'
+    };
+    document.getElementById('spinIdea').textContent=(ideas[tool]||'用 '+tool+' 做成 '+platform)+'\n→ 部署為 '+platform;
+    [document.getElementById('spinPain'),document.getElementById('spinTool'),document.getElementById('spinIdea')].forEach(el=>{
+      el.style.transform='scale(0.9)';setTimeout(()=>{el.style.transform='';},200);
+    });
+  };
+
+  // MVP Scope Cutter
+  const scopes={
+    social:{
+      original:'社群 App：貼文+按讚+留言+追蹤+推薦+限動+訊息+通知',
+      cuts:[
+        {label:'砍掉限動',remaining:'貼文+按讚+留言+追蹤+推薦+訊息+通知',days:30},
+        {label:'砍掉訊息+通知',remaining:'貼文+按讚+留言+追蹤+推薦',days:20},
+        {label:'砍掉推薦演算法',remaining:'貼文+按讚+留言+追蹤',days:14},
+        {label:'砍掉追蹤系統',remaining:'貼文+按讚+留言',days:10},
+        {label:'砍掉留言',remaining:'貼文+按讚',days:5},
+        {label:'MVP! ✓',remaining:'「發一張照片，別人能按讚」— 3 天能做完',days:3}
+      ]
+    },
+    store:{
+      original:'電商：商品+購物車+金流+物流+後台+推薦+優惠券+會員',
+      cuts:[
+        {label:'砍掉推薦+優惠券',remaining:'商品+購物車+金流+物流+後台+會員',days:28},
+        {label:'砍掉物流追蹤',remaining:'商品+購物車+金流+後台+會員',days:20},
+        {label:'砍掉後台管理',remaining:'商品+購物車+金流+會員',days:14},
+        {label:'砍掉完整會員系統',remaining:'商品+購物車+金流（簡單登入）',days:9},
+        {label:'砍掉金流串接',remaining:'商品瀏覽+加入購物車',days:5},
+        {label:'MVP! ✓',remaining:'「自動比價通知 bot」— 用 n8n 4 天做完',days:4}
+      ]
+    },
+    'ai-tutor':{
+      original:'AI 家教：多科目+進度追蹤+出題+批改+語音+影片+家長報告',
+      cuts:[
+        {label:'砍掉影片+語音',remaining:'多科目+進度追蹤+出題+批改+家長報告',days:25},
+        {label:'砍掉家長報告',remaining:'多科目+進度追蹤+出題+批改',days:18},
+        {label:'砍掉進度追蹤',remaining:'多科目+出題+批改',days:12},
+        {label:'只做一個科目',remaining:'Python 教學+出題+批改',days:8},
+        {label:'砍掉自動批改',remaining:'Python 教學+出題',days:5},
+        {label:'MVP! ✓',remaining:'「Python 練習題產生器 CLI」— 3 天做完',days:3}
+      ]
+    }
+  };
+  window.showScope = function(){
+    const v=document.getElementById('scopeSelect').value;
+    const result=document.getElementById('scopeResult');
+    if(!v){result.style.display='none';return;}
+    result.style.display='block';
+    const s=scopes[v];
+    let html='<div style="font-size:0.85rem;margin-bottom:1rem;"><strong>原始想法：</strong>'+s.original+'</div>';
+    html+='<div id="scopeSteps">';
+    s.cuts.forEach((cut,i)=>{
+      html+='<button class="btn'+(i===s.cuts.length-1?' btn-primary':'')+'" style="margin:0.25rem;font-size:0.8rem;" onclick="applyCut('+i+',\''+v+'\')">'+cut.label+'</button>';
+    });
+    html+='</div>';
+    html+='<div id="scopeStatus" style="margin-top:1rem;padding:1rem;border:2px solid var(--ink);font-family:JetBrains Mono,monospace;font-size:0.8rem;">點擊上方按鈕逐步砍功能...</div>';
+    result.innerHTML=html;
+  };
+  window.applyCut = function(idx,key){
+    const cut=scopes[key].cuts[idx];
+    const status=document.getElementById('scopeStatus');
+    status.innerHTML='<strong>剩餘功能：</strong>'+cut.remaining+'<br><strong>預估天數：</strong><span style="color:var(--accent);font-size:1.2rem;">'+cut.days+' 天</span>';
+    if(idx===scopes[key].cuts.length-1){
+      status.innerHTML+='<br><br><span style="color:var(--green);font-weight:700;">✓ 這就是你的 MVP！一週內做得完！</span>';
+    }
+  };
+
+  // Presentation Timer
+  let timerInterval=null;
+  let timerSeconds=300;
+  const phases=[{t:0,label:'Hook (0:00-0:15)'},{t:15,label:'Pain (0:15-0:45)'},{t:45,label:'Demo (0:45-2:15)'},{t:135,label:'How (2:15-3:00)'},{t:180,label:'Learnings (3:00-3:30)'},{t:210,label:'Q&A (3:30-5:00)'}];
+  function updateTimerDisplay(){
+    const m=Math.floor(timerSeconds/60);
+    const s=timerSeconds%60;
+    document.getElementById('timerDisplay').textContent=m+':'+(s<10?'0':'')+s;
+    const elapsed=300-timerSeconds;
+    let phase='完成！';
+    for(let i=phases.length-1;i>=0;i--){if(elapsed>=phases[i].t){phase=phases[i].label;break;}}
+    document.getElementById('timerPhase').textContent=phase;
+    if(timerSeconds<=60)document.getElementById('timerDisplay').style.color='var(--accent)';
+    else document.getElementById('timerDisplay').style.color='var(--ink)';
+  }
+  window.toggleTimer = function(){
+    if(timerInterval){clearInterval(timerInterval);timerInterval=null;document.getElementById('timerStartBtn').textContent='▶ 繼續';return;}
+    document.getElementById('timerStartBtn').textContent='⏸ 暫停';
+    timerInterval=setInterval(()=>{
+      timerSeconds--;
+      if(timerSeconds<=0){clearInterval(timerInterval);timerInterval=null;timerSeconds=0;document.getElementById('timerStartBtn').textContent='▶ 開始';}
+      updateTimerDisplay();
+    },1000);
+  };
+  window.resetTimer = function(){
+    clearInterval(timerInterval);timerInterval=null;timerSeconds=300;
+    document.getElementById('timerStartBtn').textContent='▶ 開始';
+    updateTimerDisplay();
+  };
+
+  // Homework Checklist with localStorage
+  const CHECKLIST_KEY='lesson3-hw-checklist';
+  function loadChecklist(){
+    try{return JSON.parse(localStorage.getItem(CHECKLIST_KEY))||{};}catch(e){return{};}
+  }
+  window.saveChecklist = function(){
+    const state={};
+    document.querySelectorAll('.hw-check').forEach(cb=>{state[cb.dataset.key]=cb.checked;});
+    localStorage.setItem(CHECKLIST_KEY,JSON.stringify(state));
+    updateCheckProgress();
+  };
+  function updateCheckProgress(){
+    const checks=document.querySelectorAll('.hw-check');
+    const done=[...checks].filter(c=>c.checked).length;
+    document.getElementById('checkProgress').textContent=done;
+    document.getElementById('checkBar').style.width=(done/checks.length*100)+'%';
+  }
+  // Restore saved state
+  const saved=loadChecklist();
+  document.querySelectorAll('.hw-check').forEach(cb=>{if(saved[cb.dataset.key])cb.checked=true;});
+  updateCheckProgress();
+})();
+</script>

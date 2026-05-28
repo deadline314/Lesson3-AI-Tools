@@ -1,0 +1,613 @@
+<!-- t4-agent.html -->
+<div class="panel-header">
+<span class="panel-num">Q4</span>
+<h2>AI Agent — 自主代理人</h2>
+</div>
+
+<p class="intro">2026 年最熱門的 AI 關鍵字就是 <strong>Agent</strong>。不同於傳統 Chatbot 只是「你問我答」，Agent 是能<span class="tip" data-tip-key="agent-def">自主思考、規劃、行動、學習</span>的程式。它會拆解目標、選擇工具、執行步驟、觀察結果，然後決定下一步——直到任務完成。</p>
+
+<h3 style="margin-bottom:1rem;">Agent 核心組件</h3>
+<div class="component-grid reveal">
+<div class="component-card">
+<h4>🧠 Brain (LLM)</h4>
+<p>推理引擎——負責理解指令、分析情境、做出決策。模型的能力直接決定 Agent 的天花板。</p>
+</div>
+<div class="component-card">
+<h4>💾 Memory</h4>
+<p>短期記憶（當前對話上下文）+ 長期記憶（跨 session 的知識庫）。讓 Agent 不會「金魚腦」。</p>
+</div>
+<div class="component-card">
+<h4>🔧 Tools</h4>
+<p>外部能力接口——API 呼叫、網路搜尋、程式碼執行、資料庫查詢。Agent 透過工具與真實世界互動。</p>
+</div>
+<div class="component-card">
+<h4>📋 Planning</h4>
+<p>策略分解——把大目標拆成可執行的小步驟。好的規劃能力讓 Agent 處理複雜任務。</p>
+</div>
+<div class="component-card">
+<h4>🔄 Loop Controller</h4>
+<p>ReAct 循環管理器——控制 Think→Act→Observe 的迭代過程，決定何時繼續、何時停止。</p>
+</div>
+</div>
+
+<!-- ═══ PLANNING STRATEGIES ═══ -->
+<h3 style="margin-bottom:1rem;">規劃策略比較</h3>
+<div id="planningStrategies" class="reveal">
+<div class="tool-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1rem;">
+<button class="btn planning-tab active" data-plan="cot">Chain of Thought</button>
+<button class="btn planning-tab" data-plan="tot">Tree of Thoughts</button>
+<button class="btn planning-tab" data-plan="pae">Plan-and-Execute</button>
+</div>
+<div class="planning-display" style="background:var(--paper-deep);border-radius:var(--radius);padding:2rem;min-height:200px;position:relative;overflow:hidden;">
+<div class="plan-visual" data-plan="cot" style="display:flex;flex-direction:column;align-items:center;gap:1rem;">
+<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
+<span class="plan-node cot-node">A 理解問題</span>
+<span class="plan-arrow">→</span>
+<span class="plan-node cot-node">B 收集資料</span>
+<span class="plan-arrow">→</span>
+<span class="plan-node cot-node">C 分析</span>
+<span class="plan-arrow">→</span>
+<span class="plan-node cot-node">D 輸出結果</span>
+</div>
+<p style="color:var(--ink-soft);margin-top:1rem;"><strong>適用：</strong>步驟明確、線性推理的任務。例如：數學題、簡單 debug。</p>
+</div>
+<div class="plan-visual" data-plan="tot" style="display:none;text-align:center;">
+<div class="tree-diagram">
+<div class="tree-level"><span class="plan-node tot-node">問題</span></div>
+<div class="tree-level">
+<span class="plan-node tot-node">路徑 A</span>
+<span class="plan-node tot-node">路徑 B</span>
+<span class="plan-node tot-node">路徑 C</span>
+</div>
+<div class="tree-level">
+<span class="plan-node tot-node tot-dead">A1 ✗</span>
+<span class="plan-node tot-node tot-win">B1 ✓</span>
+<span class="plan-node tot-node tot-dead">C1 ✗</span>
+</div>
+</div>
+<p style="color:var(--ink-soft);margin-top:1rem;"><strong>適用：</strong>需要探索多條路徑、選擇最佳方案。例如：架構設計、創意發想。</p>
+</div>
+<div class="plan-visual" data-plan="pae" style="display:none;text-align:center;">
+<div style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;">
+<div style="border:2px solid var(--blue);border-radius:var(--radius);padding:1rem;flex:1;min-width:200px;">
+<h4 style="color:var(--blue);margin-bottom:0.5rem;">Phase 1: 規劃</h4>
+<div class="step-list">
+<div class="step-item">1. 定義目標</div>
+<div class="step-item">2. 列出步驟</div>
+<div class="step-item">3. 分配資源</div>
+</div>
+</div>
+<div style="border:2px solid var(--green);border-radius:var(--radius);padding:1rem;flex:1;min-width:200px;">
+<h4 style="color:var(--green);margin-bottom:0.5rem;">Phase 2: 執行</h4>
+<div class="step-list">
+<div class="step-item">→ 逐步執行</div>
+<div class="step-item">→ 檢查結果</div>
+<div class="step-item">→ 必要時重新規劃</div>
+</div>
+</div>
+</div>
+<p style="color:var(--ink-soft);margin-top:1rem;"><strong>適用：</strong>複雜多步驟任務、需要動態調整。例如：專案開發、研究報告。</p>
+</div>
+</div>
+</div>
+
+<!-- ═══ AGENT vs CHATBOT ═══ -->
+<h3 style="margin-bottom:1rem;">Agent vs Chatbot</h3>
+<table class="compare-table reveal">
+<thead>
+<tr><th>面向</th><th>💬 Chatbot</th><th>🤖 Agent</th></tr>
+</thead>
+<tbody>
+<tr><td>主動性</td><td>被動回應</td><td>主動規劃並執行</td></tr>
+<tr><td>記憶</td><td>僅當前對話</td><td>短期 + 長期記憶</td></tr>
+<tr><td>工具使用</td><td>無或極少</td><td>多工具協調</td></tr>
+<tr><td>循環能力</td><td>單次回應</td><td>多次迭代直到完成</td></tr>
+<tr><td>自主性</td><td>低——需要人一步步引導</td><td>高——給目標就能自己做</td></tr>
+<tr><td>成本</td><td>低（單次呼叫）</td><td>高（多次 LLM + 工具呼叫）</td></tr>
+<tr><td>風險</td><td>低（只輸出文字）</td><td>中高（會執行真實操作）</td></tr>
+</tbody>
+</table>
+
+<!-- ═══ AUTONOMY SPECTRUM ═══ -->
+<h3 style="margin-bottom:1rem;">Agent 自主程度光譜</h3>
+<div class="spectrum-widget reveal" id="autonomySpectrum">
+<input type="range" min="1" max="5" value="1" class="spectrum-slider" id="spectrumSlider">
+<div class="spectrum-labels" style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--ink-soft);margin-bottom:1rem;">
+<span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+</div>
+<div class="spectrum-display" style="background:var(--paper-deep);border-radius:var(--radius);padding:1.5rem;transition:var(--transition);">
+<div class="spectrum-level" data-level="1">
+<h4 style="color:var(--green);">Level 1：Tab 補全</h4>
+<p><strong>產品範例：</strong>Copilot Autocomplete、Codeium</p>
+<p><strong>風險等級：</strong>🟢 極低——只建議，人決定是否採用</p>
+<p><strong>信任需求：</strong>不需要信任，每次都可檢視</p>
+</div>
+<div class="spectrum-level" data-level="2" style="display:none;">
+<h4 style="color:var(--blue);">Level 2：Cmd+K 指令</h4>
+<p><strong>產品範例：</strong>Cursor Cmd+K、Copilot Chat inline</p>
+<p><strong>風險等級：</strong>🟡 低——修改可見範圍的程式碼</p>
+<p><strong>信任需求：</strong>低——改動在眼前，容易 review</p>
+</div>
+<div class="spectrum-level" data-level="3" style="display:none;">
+<h4 style="color:var(--yellow);">Level 3：Composer / Chat</h4>
+<p><strong>產品範例：</strong>Cursor Composer、Windsurf、Aider</p>
+<p><strong>風險等級：</strong>🟠 中——可跨檔案修改</p>
+<p><strong>信任需求：</strong>中——需要 review diff</p>
+</div>
+<div class="spectrum-level" data-level="4" style="display:none;">
+<h4 style="color:var(--accent);">Level 4：Agent</h4>
+<p><strong>產品範例：</strong>Cursor Agent、Devin、Claude Code</p>
+<p><strong>風險等級：</strong>🔴 中高——自主執行多步驟、呼叫工具</p>
+<p><strong>信任需求：</strong>高——需要設定 guardrails 和審核機制</p>
+</div>
+<div class="spectrum-level" data-level="5" style="display:none;">
+<h4 style="color:var(--purple);">Level 5：Full Auto</h4>
+<p><strong>產品範例：</strong>自動 CI/CD Agent、自動修 bug 機器人</p>
+<p><strong>風險等級：</strong>🔴 高——無人監督的持續運作</p>
+<p><strong>信任需求：</strong>極高——需要完整測試覆蓋 + 回滾機制</p>
+</div>
+</div>
+</div>
+
+<!-- ═══ HERMES AGENT ═══ -->
+<h3 style="margin-bottom:1rem;">Hermes Agent 深入解析</h3>
+<div class="accordion reveal" data-accordion>
+<button class="accordion-trigger">架構：Brain + Memory + Tools + Gateway</button>
+<div class="accordion-content">
+<p>Hermes 採用經典的 Agent 四層架構：</p>
+<div class="component-grid">
+<div class="component-card"><h4>🧠 Brain</h4><p>支援切換底層 LLM（GPT-4、Claude、本地模型），根據任務複雜度自動選擇。</p></div>
+<div class="component-card"><h4>💾 Memory</h4><p>本地 SQLite 儲存對話歷史 + 向量資料庫儲存知識。跨 session 不遺忘。</p></div>
+<div class="component-card"><h4>🔧 Tools</h4><p>可擴充的工具系統——自帶搜尋、計算、檔案操作，支援自定義工具。</p></div>
+<div class="component-card"><h4>🌐 Gateway</h4><p>統一接入層——一個 Agent 同時服務 Discord、Slack、Web、Telegram。</p></div>
+</div>
+</div>
+</div>
+<div class="accordion" data-accordion>
+<button class="accordion-trigger">持久記憶：跨 Session 的知識管理</button>
+<div class="accordion-content">
+<p>傳統 chatbot 關掉視窗就失憶。Hermes 的記憶系統：</p>
+<ul class="feature-list">
+<li><strong>對話記憶</strong>：自動摘要過去對話，存入本地 DB</li>
+<li><strong>知識記憶</strong>：使用者教的事實、偏好、專案細節</li>
+<li><strong>技能記憶</strong>：學會的操作模式，下次自動複用</li>
+<li><strong>選擇性遺忘</strong>：可手動清除特定記憶</li>
+</ul>
+</div>
+</div>
+<div class="accordion" data-accordion>
+<button class="accordion-trigger">自動技能生成 (Auto Skill Generation)</button>
+<div class="accordion-content">
+<p>當 Agent 成功完成一個新類型的任務，它會：</p>
+<div class="step-list">
+<div class="step-item">1. 記錄完成步驟</div>
+<div class="step-item">2. 抽象成可重用的模板</div>
+<div class="step-item">3. 儲存為「技能」</div>
+<div class="step-item">4. 下次遇到類似任務直接調用</div>
+</div>
+<p class="highlight-box">類似人類的「肌肉記憶」——第一次做要想，做過之後變成自動化。</p>
+</div>
+</div>
+<div class="accordion" data-accordion>
+<button class="accordion-trigger">多平台 Gateway</button>
+<div class="accordion-content">
+<p>一個 Agent 實例，多個接入點：</p>
+<table class="compare-table">
+<thead><tr><th>平台</th><th>接入方式</th><th>適合場景</th></tr></thead>
+<tbody>
+<tr><td>Discord</td><td>Bot Token</td><td>團隊協作、社群服務</td></tr>
+<tr><td>Slack</td><td>Slack App</td><td>企業內部助手</td></tr>
+<tr><td>Web</td><td>REST API</td><td>自建介面、整合到產品</td></tr>
+<tr><td>Telegram</td><td>Bot API</td><td>個人助手、行動端</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ═══ LOCAL MODEL INTEGRATION ═══ -->
+<h3 style="margin-bottom:1rem;">本地模型整合方案</h3>
+<table class="compare-table reveal">
+<thead><tr><th>工具</th><th>難度</th><th>最適合</th><th>GPU 需求</th></tr></thead>
+<tbody>
+<tr><td><strong>Ollama</strong></td><td>⭐ 最簡單</td><td>開發者快速測試、CLI 愛好者</td><td>可選（CPU 可跑小模型）</td></tr>
+<tr><td><strong>LM Studio</strong></td><td>⭐⭐ 容易</td><td>初學者、想要 GUI 的人</td><td>建議 8GB+ VRAM</td></tr>
+<tr><td><strong>vLLM</strong></td><td>⭐⭐⭐ 進階</td><td>生產環境、高吞吐量需求</td><td>必須（16GB+ VRAM）</td></tr>
+</tbody>
+</table>
+
+<!-- ═══ QUANTIZATION ═══ -->
+<h3 style="margin-bottom:1rem;">量化 (Quantization) 解說</h3>
+<p>量化是把模型的精度降低以減少記憶體佔用。精度越低 = 越小越快，但品質會下降：</p>
+<table class="compare-table reveal">
+<thead><tr><th>精度</th><th>大小倍率</th><th>品質損失</th><th>速度提升</th></tr></thead>
+<tbody>
+<tr><td><strong>FP16</strong>（原始）</td><td>1x（基準）</td><td>無</td><td>基準</td></tr>
+<tr><td><strong>Q8</strong></td><td>~0.5x</td><td>幾乎無損</td><td>~1.5x</td></tr>
+<tr><td><strong>Q6</strong></td><td>~0.4x</td><td>極輕微</td><td>~1.8x</td></tr>
+<tr><td><strong>Q5</strong></td><td>~0.35x</td><td>輕微</td><td>~2x</td></tr>
+<tr><td><strong>Q4</strong></td><td>~0.28x</td><td>可接受</td><td>~2.5x</td></tr>
+<tr><td><strong>Q3</strong></td><td>~0.22x</td><td>明顯</td><td>~3x</td></tr>
+<tr><td><strong>Q2</strong></td><td>~0.18x</td><td>嚴重</td><td>~3.5x</td></tr>
+</tbody>
+</table>
+
+<!-- ═══ QUANTIZATION CALCULATOR ═══ -->
+<h3 style="margin-bottom:1rem;">量化計算機</h3>
+<div id="quantCalc" class="reveal" style="background:var(--paper-deep);border-radius:var(--radius);padding:1.5rem;">
+<label style="font-weight:600;">模型參數量：<span id="quantParamLabel">7B</span></label>
+<input type="range" min="1" max="70" value="7" id="quantSlider" style="width:100%;margin:0.5rem 0 1rem;">
+<div id="quantBars" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:0.5rem;margin-bottom:1rem;"></div>
+<p id="quantRecommendation" class="highlight-box" style="margin-top:1rem;"></p>
+</div>
+
+<!-- ═══ HARDWARE REQUIREMENTS ═══ -->
+<h3 style="margin-bottom:1rem;">硬體需求表</h3>
+<table class="compare-table reveal">
+<thead><tr><th>模型大小</th><th>Q4 VRAM</th><th>Q8 VRAM</th><th>FP16 VRAM</th><th>建議 GPU</th></tr></thead>
+<tbody>
+<tr><td><strong>7B</strong></td><td>~4 GB</td><td>~7 GB</td><td>~14 GB</td><td>RTX 3060 12GB</td></tr>
+<tr><td><strong>13B</strong></td><td>~7 GB</td><td>~13 GB</td><td>~26 GB</td><td>RTX 4070 Ti 16GB</td></tr>
+<tr><td><strong>34B</strong></td><td>~18 GB</td><td>~34 GB</td><td>~68 GB</td><td>RTX 4090 24GB</td></tr>
+<tr><td><strong>70B</strong></td><td>~36 GB</td><td>~70 GB</td><td>~140 GB</td><td>2x RTX 4090 / A100</td></tr>
+</tbody>
+</table>
+
+<!-- ═══ STATEFUL vs STATELESS ═══ -->
+<h3 style="margin-bottom:1rem;">Stateful vs Stateless 動態演示</h3>
+<div id="statefulDemo" class="reveal" style="background:var(--paper-deep);border-radius:var(--radius);padding:1.5rem;">
+<button class="btn btn-primary" id="statePlayBtn" style="margin-bottom:1rem;">▶ 播放演示</button>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+<div style="border:2px solid var(--accent);border-radius:var(--radius);padding:1rem;">
+<h4 style="color:var(--accent);text-align:center;margin-bottom:0.5rem;">Stateless（無狀態）</h4>
+<div class="state-chat" id="statelessChat" style="min-height:180px;font-size:0.85rem;"></div>
+</div>
+<div style="border:2px solid var(--green);border-radius:var(--radius);padding:1rem;">
+<h4 style="color:var(--green);text-align:center;margin-bottom:0.5rem;">Stateful（有狀態）</h4>
+<div class="state-chat" id="statefulChat" style="min-height:180px;font-size:0.85rem;"></div>
+</div>
+</div>
+</div>
+
+<!-- ═══ AGENT SIMULATOR ═══ -->
+<h3 style="margin-bottom:1rem;">Agent 模擬器</h3>
+<div id="agentSim" class="reveal" style="background:var(--paper-deep);border-radius:var(--radius);padding:1.5rem;">
+<div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">
+<select id="agentScenario" style="padding:0.5rem;border-radius:var(--radius);border:1px solid var(--ink-soft);flex:1;min-width:200px;">
+<option value="weather">查天氣+提醒</option>
+<option value="blog">寫部落格文章</option>
+<option value="debug">Debug 生產問題</option>
+<option value="feature">規劃功能開發</option>
+<option value="report">整理週報</option>
+</select>
+<button class="btn btn-primary" id="agentRunBtn">▶ 執行</button>
+</div>
+<div class="react-stage" id="reactStage">
+<div class="react-loop" id="reactLoop"></div>
+</div>
+</div>
+
+<!-- ═══ BUILD YOUR AGENT ═══ -->
+<h3 style="margin-bottom:1rem;">打造你的 Agent</h3>
+<div id="agentBuilder" class="reveal" style="background:var(--paper-deep);border-radius:var(--radius);padding:1.5rem;">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin-bottom:1.5rem;">
+<div>
+<label style="font-weight:600;display:block;margin-bottom:0.5rem;">🧠 Brain Model</label>
+<select id="builderBrain" style="width:100%;padding:0.5rem;border-radius:var(--radius);border:1px solid var(--ink-soft);">
+<option value="gpt4">GPT-4</option>
+<option value="claude">Claude Sonnet</option>
+<option value="gemini">Gemini Pro</option>
+<option value="llama70">Llama-70B (本地)</option>
+<option value="llama7">Llama-7B (本地)</option>
+</select>
+</div>
+<div>
+<label style="font-weight:600;display:block;margin-bottom:0.5rem;">💾 Memory Type</label>
+<select id="builderMemory" style="width:100%;padding:0.5rem;border-radius:var(--radius);border:1px solid var(--ink-soft);">
+<option value="none">無記憶</option>
+<option value="short">僅短期記憶</option>
+<option value="full">完整持久記憶</option>
+</select>
+</div>
+<div>
+<label style="font-weight:600;display:block;margin-bottom:0.5rem;">🔧 Tools</label>
+<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+<label style="font-size:0.85rem;"><input type="checkbox" class="builder-tool" value="search"> 網路搜尋</label>
+<label style="font-size:0.85rem;"><input type="checkbox" class="builder-tool" value="code"> 程式執行</label>
+<label style="font-size:0.85rem;"><input type="checkbox" class="builder-tool" value="email"> Email</label>
+<label style="font-size:0.85rem;"><input type="checkbox" class="builder-tool" value="calendar"> 日曆</label>
+<label style="font-size:0.85rem;"><input type="checkbox" class="builder-tool" value="db"> 資料庫</label>
+</div>
+</div>
+</div>
+<div id="builderOutput" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+<div style="text-align:center;padding:1rem;background:var(--paper);border-radius:var(--radius);">
+<div style="font-size:1.8rem;font-weight:700;color:var(--accent);" id="builderCost">$20</div>
+<div style="font-size:0.8rem;color:var(--ink-soft);">預估月費</div>
+</div>
+<div style="text-align:center;padding:1rem;background:var(--paper);border-radius:var(--radius);">
+<div style="font-size:1.8rem;font-weight:700;color:var(--blue);" id="builderScore">5</div>
+<div style="font-size:0.8rem;color:var(--ink-soft);">能力分數 /10</div>
+</div>
+<div style="text-align:center;padding:1rem;background:var(--paper);border-radius:var(--radius);">
+<div style="font-size:0.9rem;font-weight:600;color:var(--green);padding-top:0.5rem;" id="builderUseCase">一般問答助手</div>
+<div style="font-size:0.8rem;color:var(--ink-soft);">建議用途</div>
+</div>
+</div>
+<div id="builderBars" style="margin-top:1rem;display:grid;grid-template-columns:repeat(5,1fr);gap:0.3rem;align-items:end;height:100px;"></div>
+</div>
+
+<!-- ═══ ARCHITECTURE EXPLORER ═══ -->
+<h3 style="margin-bottom:1rem;">Agent 架構探索器</h3>
+<div id="archExplorer" class="reveal" style="background:var(--paper-deep);border-radius:var(--radius);padding:1.5rem;">
+<div class="arch-diagram" style="position:relative;min-height:280px;display:flex;align-items:center;justify-content:center;">
+<div class="arch-center" style="position:absolute;width:90px;height:90px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;cursor:pointer;z-index:2;box-shadow:var(--shadow);" data-arch="brain">🧠 Brain</div>
+<div class="arch-node" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);padding:0.6rem 1rem;background:var(--blue);color:white;border-radius:var(--radius);cursor:pointer;font-size:0.85rem;font-weight:600;" data-arch="memory">💾 Memory</div>
+<div class="arch-node" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);padding:0.6rem 1rem;background:var(--green);color:white;border-radius:var(--radius);cursor:pointer;font-size:0.85rem;font-weight:600;" data-arch="tools">🔧 Tools</div>
+<div class="arch-node" style="position:absolute;left:20px;top:50%;transform:translateY(-50%);padding:0.6rem 1rem;background:var(--purple);color:white;border-radius:var(--radius);cursor:pointer;font-size:0.85rem;font-weight:600;" data-arch="planning">📋 Planning</div>
+<div class="arch-node" style="position:absolute;right:20px;top:50%;transform:translateY(-50%);padding:0.6rem 1rem;background:var(--pink);color:white;border-radius:var(--radius);cursor:pointer;font-size:0.85rem;font-weight:600;" data-arch="output">📤 Output</div>
+</div>
+<div id="archDetail" style="margin-top:1rem;padding:1rem;background:var(--paper);border-radius:var(--radius);min-height:60px;">
+<p style="color:var(--ink-soft);text-align:center;">點擊上方組件查看詳細說明</p>
+</div>
+</div>
+
+<!-- ═══ QUIZ ═══ -->
+<h3 style="margin-bottom:1rem;">測驗時間</h3>
+<div id="agentQuiz" class="quiz-box reveal">
+<div class="quiz-question" data-q="1">
+<p><strong>Q1：</strong>你需要一個工具「每天自動爬取競品價格，存入資料庫，並在價格異常時發 Slack 通知」。應該用什麼？</p>
+<div class="scenario-option" data-correct="false">💬 Chatbot——讓它每天回答一次就好</div>
+<div class="scenario-option" data-correct="true">🤖 Agent——需要自主排程、多工具協調、循環執行</div>
+<div class="scenario-option" data-correct="false">👥 Multi-Agent——一個 Agent 就夠了</div>
+<div class="quiz-feedback" style="display:none;"></div>
+</div>
+<div class="quiz-question" data-q="2" style="margin-top:1.5rem;">
+<p><strong>Q2：</strong>使用者問「台北明天天氣如何？」且不需要後續動作。應該用什麼？</p>
+<div class="scenario-option" data-correct="true">💬 Chatbot——單次問答，不需要記憶或工具循環</div>
+<div class="scenario-option" data-correct="false">🤖 Agent——殺雞用牛刀，成本過高</div>
+<div class="scenario-option" data-correct="false">👥 Multi-Agent——完全不需要</div>
+<div class="quiz-feedback" style="display:none;"></div>
+</div>
+<div class="quiz-question" data-q="3" style="margin-top:1.5rem;">
+<p><strong>Q3：</strong>你想讓 AI 全自動處理：接收 GitHub issue → 分析需求 → 寫程式碼 → 跑測試 → 發 PR。該用什麼？</p>
+<div class="scenario-option" data-correct="false">💬 Chatbot——無法自主執行多步驟</div>
+<div class="scenario-option" data-correct="true">🤖 Agent——需要規劃、工具使用、循環驗證</div>
+<div class="scenario-option" data-correct="false">👥 Multi-Agent——單一 Agent 足以處理</div>
+<div class="quiz-feedback" style="display:none;"></div>
+</div>
+<div class="quiz-question" data-q="4" style="margin-top:1.5rem;">
+<p><strong>Q4：</strong>70B 模型用 Q4 量化後大約需要多少 VRAM？</p>
+<div class="scenario-option" data-correct="false">~14 GB</div>
+<div class="scenario-option" data-correct="true">~36 GB</div>
+<div class="scenario-option" data-correct="false">~70 GB</div>
+<div class="quiz-feedback" style="display:none;"></div>
+</div>
+</div>
+
+<script>
+(function(){
+const planTabs=document.querySelectorAll('.planning-tab');
+const planVisuals=document.querySelectorAll('.plan-visual');
+planTabs.forEach(t=>t.addEventListener('click',()=>{
+  planTabs.forEach(b=>b.classList.remove('active'));
+  t.classList.add('active');
+  const p=t.dataset.plan;
+  planVisuals.forEach(v=>v.style.display=v.dataset.plan===p?'':'none');
+}));
+
+const specSlider=document.getElementById('spectrumSlider');
+const specLevels=document.querySelectorAll('.spectrum-level');
+if(specSlider)specSlider.addEventListener('input',()=>{
+  const v=specSlider.value;
+  specLevels.forEach(l=>l.style.display=l.dataset.level===v?'':'none');
+});
+
+function initQuantCalc(){
+  const slider=document.getElementById('quantSlider');
+  const label=document.getElementById('quantParamLabel');
+  const bars=document.getElementById('quantBars');
+  const rec=document.getElementById('quantRecommendation');
+  if(!slider)return;
+  const levels=[
+    {name:'FP16',mult:2,color:'var(--purple)'},
+    {name:'Q8',mult:1,color:'var(--blue)'},
+    {name:'Q6',mult:0.78,color:'var(--blue)'},
+    {name:'Q5',mult:0.68,color:'var(--green)'},
+    {name:'Q4',mult:0.56,color:'var(--green)'},
+    {name:'Q3',mult:0.44,color:'var(--yellow)'},
+    {name:'Q2',mult:0.36,color:'var(--accent)'}
+  ];
+  function update(){
+    const p=parseInt(slider.value);
+    label.textContent=p+'B';
+    let html='';
+    levels.forEach(l=>{
+      const vram=(p*l.mult).toFixed(1);
+      const pct=Math.min((p*l.mult)/140*100,100);
+      html+=`<div style="text-align:center;"><div style="background:${l.color};height:${pct}%;min-height:20px;border-radius:4px 4px 0 0;display:flex;align-items:flex-end;justify-content:center;padding:2px;color:white;font-size:0.7rem;font-weight:600;">${vram}G</div><div style="font-size:0.7rem;margin-top:4px;">${l.name}</div></div>`;
+    });
+    bars.innerHTML=html;
+    bars.style.height='120px';
+    bars.style.alignItems='end';
+    const q4vram=p*0.56;
+    let advice='';
+    if(q4vram<=7)advice='✅ 8GB GPU（RTX 3060）即可用 Q4 跑此模型';
+    else if(q4vram<=15)advice='✅ 16GB GPU（RTX 4070 Ti）可用 Q4 跑此模型';
+    else if(q4vram<=22)advice='⚠️ 需要 24GB GPU（RTX 4090）才能跑 Q4';
+    else advice='🔴 需要多張 GPU 或企業級硬體（A100/H100）';
+    rec.textContent=advice;
+  }
+  slider.addEventListener('input',update);
+  update();
+}
+initQuantCalc();
+
+const statePlayBtn=document.getElementById('statePlayBtn');
+if(statePlayBtn)statePlayBtn.addEventListener('click',()=>{
+  const sl=document.getElementById('statelessChat');
+  const sf=document.getElementById('statefulChat');
+  sl.innerHTML='';sf.innerHTML='';
+  const msgs=[
+    {u:'我叫小明',sl:'你好！有什麼可以幫你？',sf:'你好小明！有什麼可以幫你？'},
+    {u:'我喜歡 Python',sl:'Python 是很好的語言！',sf:'小明，Python 很適合你入門！'},
+    {u:'幫我推薦學習資源',sl:'你想學什麼語言呢？',sf:'小明，推薦你這些 Python 學習資源...'}
+  ];
+  let i=0;
+  function show(){
+    if(i>=msgs.length)return;
+    const m=msgs[i];
+    const uEl=`<div style="margin:0.3rem 0;padding:0.3rem 0.6rem;background:var(--blue);color:white;border-radius:8px;display:inline-block;font-size:0.8rem;">👤 ${m.u}</div><br>`;
+    sl.innerHTML+=uEl;sf.innerHTML+=uEl;
+    setTimeout(()=>{
+      sl.innerHTML+=`<div style="margin:0.3rem 0;padding:0.3rem 0.6rem;background:var(--paper);border-radius:8px;display:inline-block;font-size:0.8rem;">🤖 ${m.sl}</div><br>`;
+      sf.innerHTML+=`<div style="margin:0.3rem 0;padding:0.3rem 0.6rem;background:var(--paper);border-radius:8px;display:inline-block;font-size:0.8rem;">🤖 ${m.sf}</div><br>`;
+      i++;setTimeout(show,1200);
+    },600);
+  }
+  show();
+});
+
+const scenarios={
+  weather:[
+    {type:'thought',text:'使用者想知道天氣並設提醒。需要：1)查天氣 API 2)設定提醒'},
+    {type:'action',text:'呼叫 Weather API → 查詢台北天氣'},
+    {type:'observation',text:'回傳：明天台北 28°C，午後雷陣雨'},
+    {type:'thought',text:'有雨，應該提醒帶傘。接著設定提醒。'},
+    {type:'action',text:'呼叫 Calendar API → 設定明早 8:00 提醒'},
+    {type:'observation',text:'提醒已建立 ✓'},
+    {type:'output',text:'明天台北 28°C 午後有雨，已幫你設定明早提醒帶傘 ☂️'}
+  ],
+  blog:[
+    {type:'thought',text:'使用者要寫部落格。需要：1)研究主題 2)擬大綱 3)撰寫'},
+    {type:'action',text:'Web Search → 搜尋最新 AI Agent 趨勢'},
+    {type:'observation',text:'找到 5 篇相關文章，擷取重點'},
+    {type:'thought',text:'資料足夠，開始擬定大綱'},
+    {type:'action',text:'生成文章大綱 → 引言/3個重點/結論'},
+    {type:'observation',text:'大綱完成，結構合理'},
+    {type:'action',text:'撰寫完整文章 ~1500 字'},
+    {type:'output',text:'文章已完成！包含引言、三大趨勢分析、結論和行動建議。'}
+  ],
+  debug:[
+    {type:'thought',text:'生產環境出錯。需要：1)查 log 2)定位問題 3)修復'},
+    {type:'action',text:'呼叫 Log API → 搜尋最近 error'},
+    {type:'observation',text:'發現 NullPointerException at UserService.java:142'},
+    {type:'thought',text:'定位到問題。查看該程式碼確認 root cause'},
+    {type:'action',text:'讀取 UserService.java:140-145'},
+    {type:'observation',text:'user.getProfile() 未做 null check'},
+    {type:'action',text:'產生修復 patch + 單元測試'},
+    {type:'output',text:'Root cause: 缺少 null check。已產生修復 PR #234，含測試。'}
+  ],
+  feature:[
+    {type:'thought',text:'需要規劃新功能開發。拆解成：需求分析→設計→實作→測試'},
+    {type:'action',text:'分析 issue 描述 + 現有程式碼結構'},
+    {type:'observation',text:'功能涉及 3 個 service，需要新增 2 個 API endpoint'},
+    {type:'thought',text:'規模中等，預估 3 天。先設計 API schema'},
+    {type:'action',text:'產生 API spec + 資料庫 migration'},
+    {type:'observation',text:'Schema 設計完成，無衝突'},
+    {type:'output',text:'開發計畫已產出：Day1 API+DB、Day2 業務邏輯、Day3 測試+部署'}
+  ],
+  report:[
+    {type:'thought',text:'整理週報需要：1)收集本週工作 2)整理成報告格式'},
+    {type:'action',text:'查詢 Git commits + Jira tickets（本週）'},
+    {type:'observation',text:'本週 12 commits、關閉 5 tickets、1 個 PR pending'},
+    {type:'action',text:'查詢會議紀錄摘要'},
+    {type:'observation',text:'2 場會議：Sprint planning + Tech review'},
+    {type:'action',text:'彙整成週報格式'},
+    {type:'output',text:'週報已產出：完成 5 項任務、1 項進行中、下週計畫 3 項重點。'}
+  ]
+};
+const agentRunBtn=document.getElementById('agentRunBtn');
+if(agentRunBtn)agentRunBtn.addEventListener('click',()=>{
+  const sel=document.getElementById('agentScenario').value;
+  const loop=document.getElementById('reactLoop');
+  const steps=scenarios[sel];
+  loop.innerHTML='';
+  let i=0;
+  function showStep(){
+    if(i>=steps.length)return;
+    const s=steps[i];
+    const colors={thought:'var(--blue)',action:'var(--accent)',observation:'var(--green)',output:'var(--purple)'};
+    const labels={thought:'💭 Thought',action:'⚡ Action',observation:'👁️ Observation',output:'✅ Output'};
+    const el=document.createElement('div');
+    el.style.cssText=`padding:0.6rem 1rem;margin:0.4rem 0;border-left:4px solid ${colors[s.type]};background:var(--paper);border-radius:0 var(--radius) var(--radius) 0;opacity:0;transform:translateX(-10px);transition:all 0.3s;`;
+    el.innerHTML=`<span style="font-size:0.75rem;font-weight:600;color:${colors[s.type]};">${labels[s.type]}</span><p style="margin:0.2rem 0 0;font-size:0.85rem;">${s.text}</p>`;
+    loop.appendChild(el);
+    requestAnimationFrame(()=>{el.style.opacity='1';el.style.transform='translateX(0)';});
+    i++;setTimeout(showStep,900);
+  }
+  showStep();
+});
+
+function initBuilder(){
+  const brain=document.getElementById('builderBrain');
+  const mem=document.getElementById('builderMemory');
+  const tools=document.querySelectorAll('.builder-tool');
+  const cost=document.getElementById('builderCost');
+  const score=document.getElementById('builderScore');
+  const useCase=document.getElementById('builderUseCase');
+  const barsEl=document.getElementById('builderBars');
+  if(!brain)return;
+  const brainData={gpt4:{cost:30,score:9},claude:{cost:25,score:9},gemini:{cost:20,score:8},llama70:{cost:5,score:7},llama7:{cost:1,score:4}};
+  const memData={none:{cost:0,score:0},short:{cost:2,score:2},full:{cost:8,score:4}};
+  function update(){
+    const b=brainData[brain.value];
+    const m=memData[mem.value];
+    let toolCount=0;tools.forEach(t=>{if(t.checked)toolCount++;});
+    const totalCost=b.cost+m.cost+toolCount*5;
+    const totalScore=Math.min(10,Math.round((b.score+m.score+toolCount*1.2)/1.5));
+    cost.textContent='$'+totalCost;
+    score.textContent=totalScore;
+    let uc='一般問答助手';
+    if(totalScore>=9)uc='全自動工作流 Agent';
+    else if(totalScore>=7)uc='專業開發助手';
+    else if(totalScore>=5)uc='日常任務助手';
+    useCase.textContent=uc;
+    const dims=['推理','記憶','工具','成本效益','自主性'];
+    const vals=[b.score,m.score+3,toolCount*2,Math.max(1,10-totalCost/10),Math.min(10,totalScore)];
+    let bh='';
+    dims.forEach((d,idx)=>{
+      const h=Math.max(10,vals[idx]*10);
+      bh+=`<div style="text-align:center;"><div style="background:var(--accent);width:100%;height:${h}%;border-radius:4px 4px 0 0;transition:height 0.3s;"></div><div style="font-size:0.65rem;margin-top:4px;">${d}</div></div>`;
+    });
+    barsEl.innerHTML=bh;
+  }
+  brain.addEventListener('change',update);
+  mem.addEventListener('change',update);
+  tools.forEach(t=>t.addEventListener('change',update));
+  update();
+}
+initBuilder();
+
+const archDetails={
+  brain:'<strong>🧠 Brain (LLM)</strong><br>Agent 的核心推理引擎。負責理解自然語言指令、分析上下文、做出決策。模型的選擇直接決定 Agent 的智商上限。越強的模型 = 越好的規劃和推理能力，但也越貴越慢。',
+  memory:'<strong>💾 Memory</strong><br>分為短期記憶（Working Memory，當前任務的上下文）和長期記憶（Persistent Memory，跨 session 的知識）。好的記憶系統讓 Agent 能累積經驗、避免重複錯誤。',
+  tools:'<strong>🔧 Tools</strong><br>Agent 與外部世界互動的接口。包括：API 呼叫、網路搜尋、程式碼執行、檔案讀寫、資料庫操作等。工具的品質和多樣性決定 Agent 能做多少事。',
+  planning:'<strong>📋 Planning</strong><br>把複雜目標分解成可執行步驟的能力。好的規劃器能處理依賴關係、並行任務、錯誤恢復。常用策略：Chain of Thought、Tree of Thoughts、Plan-and-Execute。',
+  output:'<strong>📤 Output</strong><br>Agent 的執行結果輸出。可以是文字回覆、程式碼產出、API 呼叫、檔案生成等。好的 Agent 會在輸出前進行自我驗證（self-check）。'
+};
+document.querySelectorAll('[data-arch]').forEach(el=>{
+  el.addEventListener('click',()=>{
+    const key=el.dataset.arch;
+    const detail=document.getElementById('archDetail');
+    if(detail&&archDetails[key])detail.innerHTML=archDetails[key];
+  });
+});
+
+document.querySelectorAll('.scenario-option').forEach(opt=>{
+  opt.addEventListener('click',()=>{
+    const q=opt.closest('.quiz-question');
+    if(q.classList.contains('answered'))return;
+    q.classList.add('answered');
+    const fb=q.querySelector('.quiz-feedback');
+    const correct=opt.dataset.correct==='true';
+    opt.style.border=correct?'2px solid var(--green)':'2px solid var(--accent)';
+    q.querySelectorAll('.scenario-option').forEach(o=>{
+      if(o.dataset.correct==='true')o.style.background='rgba(0,200,83,0.1)';
+    });
+    fb.style.display='block';
+    fb.textContent=correct?'✅ 正確！':'❌ 再想想——看看正確答案（綠色底色）';
+    fb.style.color=correct?'var(--green)':'var(--accent)';
+  });
+});
+})();
+</script>

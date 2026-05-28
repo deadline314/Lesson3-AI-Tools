@@ -1,0 +1,448 @@
+<div class="panel-header">
+<span class="panel-num">⑥</span>
+<h2>開發工作流</h2>
+</div>
+
+<p class="intro">知道工具只是第一步，<strong>怎麼用</strong>才是關鍵。這一章教你完整的 AI 輔助開發流程：從寫 prompt、拆任務、到 debug 和管理 API 額度。</p>
+
+<div class="accordion">
+<div class="accordion-trigger">完整 12 步工作流</div>
+<div class="accordion-content">
+<ol class="step-list">
+<li><strong>需求釐清</strong> — 用自然語言寫下「我要做什麼」+ 驗收標準</li>
+<li><strong>拆解任務</strong> — 把大目標拆成 3-5 個可驗證的子任務</li>
+<li><strong>建立專案</strong> — 用 AI 產出 boilerplate（框架、設定檔）</li>
+<li><strong>設定 AI Context</strong> — 寫 CLAUDE.md / .cursorrules</li>
+<li><strong>逐步實作</strong> — 一次只做一個子任務</li>
+<li><strong>每步驗證</strong> — 跑測試 / 看畫面 / code review</li>
+<li><strong>Debug</strong> — 貼完整錯誤 + context 給 AI</li>
+<li><strong>重構</strong> — 功能做完後請 AI 整理程式碼</li>
+<li><strong>寫測試</strong> — 請 AI 針對邊界條件產測試</li>
+<li><strong>寫文件</strong> — AI 產 README / API doc</li>
+<li><strong>PR</strong> — 用 AI 產 PR description</li>
+<li><strong>部署</strong> — CI/CD 設定也可以請 AI 幫忙</li>
+</ol>
+</div>
+</div>
+
+<!-- Temperature Playground -->
+<div class="highlight-box reveal" id="tempPlayground">
+<h4>Temperature 遊樂場</h4>
+<p>同一個 prompt，不同 temperature 會得到不同風格的回答。拖動看變化：</p>
+<div style="display:flex;align-items:center;gap:1rem;margin:1rem 0;">
+<label style="font-weight:700;font-size:0.85rem;">Temperature:</label>
+<input type="range" id="tempSlider" min="0" max="20" value="7" step="1" style="flex:1;" oninput="updateTemp()">
+<span id="tempVal" style="font-family:JetBrains Mono,monospace;font-weight:700;font-size:1.1rem;min-width:2.5rem;">0.7</span>
+</div>
+<div style="font-family:JetBrains Mono,monospace;font-size:0.75rem;display:flex;justify-content:space-between;opacity:0.6;margin-bottom:1rem;">
+<span>0.0 確定性</span><span>1.0 平衡</span><span>2.0 創意爆發</span>
+</div>
+<div style="background:var(--ink);color:var(--paper);padding:1rem;font-family:JetBrains Mono,monospace;font-size:0.8rem;border:2px solid var(--ink);">
+<div style="color:var(--yellow);margin-bottom:0.5rem;">Prompt: "用一句話描述 JavaScript"</div>
+<div id="tempOutput" style="line-height:1.6;">JavaScript 是一種動態型別的程式語言。</div>
+</div>
+<div id="tempExplain" style="margin-top:0.75rem;font-size:0.85rem;color:var(--ink-soft);"></div>
+</div>
+
+<!-- RCAF Builder Enhanced -->
+<div class="rcaf-builder reveal">
+<h3>RCAF 練習場 — 含預設模板</h3>
+<p>選一個預設模板快速開始，或自己填寫：</p>
+<div style="margin-bottom:1rem;">
+<select id="rcafPresets" style="padding:0.5rem;border:2px solid var(--ink);font-size:0.85rem;" onchange="loadRcafPreset()">
+<option value="">— 選擇預設模板 —</option>
+<option value="api">後端 API 開發</option>
+<option value="refactor">程式碼重構</option>
+<option value="debug">Debug 求助</option>
+<option value="test">撰寫測試</option>
+<option value="review">Code Review</option>
+</select>
+</div>
+<div class="rcaf-grid">
+<div class="rcaf-inputs">
+<div class="rcaf-field"><label class="rcaf-label rcaf-r">R · Role</label><input type="text" id="rcafR2" placeholder="角色" class="rcaf-input" oninput="updateRcafPreview2()"></div>
+<div class="rcaf-field"><label class="rcaf-label rcaf-c">C · Context</label><textarea id="rcafC2" placeholder="背景" class="rcaf-input" rows="3" oninput="updateRcafPreview2()"></textarea></div>
+<div class="rcaf-field"><label class="rcaf-label rcaf-a">A · Action</label><textarea id="rcafA2" placeholder="任務" class="rcaf-input" rows="2" oninput="updateRcafPreview2()"></textarea></div>
+<div class="rcaf-field"><label class="rcaf-label rcaf-f">F · Format</label><input type="text" id="rcafF2" placeholder="輸出格式" class="rcaf-input" oninput="updateRcafPreview2()"></div>
+</div>
+<div class="rcaf-output">
+<label>產出的 Prompt</label>
+<div class="rcaf-preview" id="rcafPreview2"><span class="rcaf-placeholder">← 選模板或自己填寫...</span></div>
+<button class="btn btn-primary" onclick="const p=document.getElementById('rcafPreview2');if(p&&p.textContent){navigator.clipboard.writeText(p.textContent).then(()=>{this.textContent='✓ 已複製';setTimeout(()=>{this.textContent='📋 複製'},1500)})}">📋 複製</button>
+</div>
+</div>
+</div>
+
+<!-- Task Decomposer -->
+<div class="highlight-box reveal" id="taskDecomposer">
+<h4>任務拆解器</h4>
+<p>選擇一個大任務，看 AI 怎麼把它拆成可執行的小步驟：</p>
+<select id="decomposeSelect" style="width:100%;padding:0.5rem;border:2px solid var(--ink);font-size:0.85rem;margin:0.75rem 0;" onchange="showDecomposition()">
+<option value="">— 選擇大任務 —</option>
+<option value="ecommerce">做一個電商網站</option>
+<option value="chatbot">做一個客服聊天機器人</option>
+<option value="dashboard">做一個數據儀表板</option>
+<option value="mobile">做一個手機 App</option>
+</select>
+<div id="decomposeResult" style="display:none;">
+<div id="decomposeBad" class="code-block bad" style="margin-bottom:1rem;"><pre><code id="decomposeBadCode"></code></pre></div>
+<div style="font-weight:700;margin-bottom:0.5rem;color:var(--green);">✓ 正確拆法：</div>
+<ol class="step-list" id="decomposeGood"></ol>
+</div>
+</div>
+
+<!-- System Prompt vs User Prompt -->
+<div class="highlight-box reveal">
+<h4>System Prompt vs User Prompt</h4>
+<p>System Prompt 設定 AI 的「人格」，User Prompt 是具體指令。兩者搭配才完整。</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+<div style="border:2px solid var(--purple);padding:1rem;border-radius:var(--radius);">
+<div style="font-weight:700;color:var(--purple);margin-bottom:0.5rem;font-size:0.85rem;">SYSTEM PROMPT（設定人格）</div>
+<div style="font-family:JetBrains Mono,monospace;font-size:0.8rem;line-height:1.6;">你是資深 React 工程師。<br>偏好 TypeScript + Tailwind。<br>程式碼簡潔，不加不必要的註解。<br>有 bug 先解釋原因再給修法。</div>
+</div>
+<div style="border:2px solid var(--blue);padding:1rem;border-radius:var(--radius);">
+<div style="font-weight:700;color:var(--blue);margin-bottom:0.5rem;font-size:0.85rem;">USER PROMPT（具體指令）</div>
+<div style="font-family:JetBrains Mono,monospace;font-size:0.8rem;line-height:1.6;">幫我寫一個 Modal component，<br>支援 ESC 關閉和點擊 backdrop 關閉，<br>有 open/close 動畫。</div>
+</div>
+</div>
+<p style="margin-top:1rem;font-size:0.85rem;color:var(--ink-soft);">System Prompt 像是「面試時的 JD」，User Prompt 像是「今天的工作指派」。前者只設一次，後者每次不同。</p>
+</div>
+
+<!-- Rate Limit Simulator -->
+<div class="highlight-box reveal" id="rateLimitSim">
+<h4>Rate Limit 模擬器</h4>
+<p>看請求如何撞到限制、退避、重試：</p>
+<div style="margin:1rem 0;">
+<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+<span style="font-size:0.8rem;font-weight:700;">RPM 限制：</span>
+<span style="font-family:JetBrains Mono,monospace;">60 req/min</span>
+<span style="margin-left:auto;font-size:0.8rem;font-weight:700;">TPM 限制：</span>
+<span style="font-family:JetBrains Mono,monospace;">100K tokens/min</span>
+</div>
+<div id="rateLimitBar" style="height:24px;border:2px solid var(--ink);position:relative;overflow:hidden;background:var(--paper-deep);">
+<div id="rateLimitFill" style="height:100%;width:0%;background:var(--green);transition:width 0.3s;"></div>
+<div id="rateLimitLabel" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:JetBrains Mono,monospace;font-size:0.75rem;font-weight:700;">0 / 60 RPM</div>
+</div>
+</div>
+<div id="rateLimitLog" style="height:120px;overflow-y:auto;border:2px solid var(--ink);padding:0.5rem;font-family:JetBrains Mono,monospace;font-size:0.75rem;background:var(--ink);color:var(--paper);">等待啟動...</div>
+<button class="btn btn-primary" style="margin-top:0.75rem;" id="rateLimitBtn" onclick="simulateRateLimit()">▶ 模擬 Burst Traffic</button>
+</div>
+
+<!-- Exponential Backoff -->
+<div class="accordion">
+<div class="accordion-trigger">Exponential Backoff 指數退避</div>
+<div class="accordion-content">
+<p>當 API 回傳 429 (Rate Limited) 時，不要瘋狂重試——用指數退避：</p>
+<div class="code-block">
+<pre><code>async function callWithBackoff(fn, maxRetries = 5) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (err.status !== 429 || attempt === maxRetries - 1) throw err;
+      const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+      console.log(`Rate limited. Retry in ${(delay/1000).toFixed(1)}s...`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
+
+// 延遲序列：1s → 2s → 4s → 8s → 16s（+ 隨機抖動）</code></pre>
+</div>
+<table class="compare-table">
+<thead><tr><th>重試次數</th><th>等待時間</th><th>累計等待</th></tr></thead>
+<tbody>
+<tr><td>第 1 次</td><td>~1-2 秒</td><td>~1.5 秒</td></tr>
+<tr><td>第 2 次</td><td>~2-3 秒</td><td>~4 秒</td></tr>
+<tr><td>第 3 次</td><td>~4-5 秒</td><td>~8.5 秒</td></tr>
+<tr><td>第 4 次</td><td>~8-9 秒</td><td>~17 秒</td></tr>
+<tr><td>第 5 次</td><td>~16-17 秒</td><td>~34 秒</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- API Tier System -->
+<div class="accordion">
+<div class="accordion-trigger">API Tier 系統 & 費用概念</div>
+<div class="accordion-content">
+<h4>RPM vs TPM</h4>
+<table class="compare-table">
+<thead><tr><th>指標</th><th>全名</th><th>意思</th><th>誰容易撞到</th></tr></thead>
+<tbody>
+<tr><td>RPM</td><td>Requests Per Minute</td><td>每分鐘能發幾次請求</td><td>高頻小任務（如自動補全）</td></tr>
+<tr><td>TPM</td><td>Tokens Per Minute</td><td>每分鐘能處理多少 token</td><td>長文處理（如全文翻譯）</td></tr>
+</tbody>
+</table>
+<h4>Tier 等級</h4>
+<table class="compare-table">
+<thead><tr><th>Tier</th><th>RPM</th><th>TPM</th><th>如何升級</th></tr></thead>
+<tbody>
+<tr><td>Free</td><td>3-20</td><td>40K</td><td>綁定信用卡</td></tr>
+<tr><td>Tier 1</td><td>60-500</td><td>100K-200K</td><td>累計消費 $5+</td></tr>
+<tr><td>Tier 2</td><td>500-5000</td><td>2M</td><td>累計消費 $50+</td></tr>
+<tr><td>Tier 3</td><td>5000+</td><td>10M+</td><td>累計消費 $100+</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- API Cost Estimator -->
+<div class="highlight-box reveal" id="costEstimator">
+<h4>API 費用估算器</h4>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+<div>
+<label style="font-weight:700;font-size:0.85rem;">模型</label>
+<select id="costModel" style="width:100%;padding:0.5rem;border:2px solid var(--ink);margin-top:0.3rem;" onchange="calcCost()">
+<option value="gpt4o">GPT-4o ($2.5/1M in, $10/1M out)</option>
+<option value="claude-sonnet">Claude Sonnet ($3/1M in, $15/1M out)</option>
+<option value="claude-haiku">Claude Haiku ($0.25/1M in, $1.25/1M out)</option>
+<option value="gpt4o-mini">GPT-4o-mini ($0.15/1M in, $0.6/1M out)</option>
+</select>
+<label style="font-weight:700;font-size:0.85rem;margin-top:0.75rem;display:block;">平均 Input tokens / 次</label>
+<input id="costInput" type="number" value="2000" style="width:100%;padding:0.5rem;border:2px solid var(--ink);margin-top:0.3rem;" oninput="calcCost()">
+<label style="font-weight:700;font-size:0.85rem;margin-top:0.75rem;display:block;">平均 Output tokens / 次</label>
+<input id="costOutput" type="number" value="1000" style="width:100%;padding:0.5rem;border:2px solid var(--ink);margin-top:0.3rem;" oninput="calcCost()">
+<label style="font-weight:700;font-size:0.85rem;margin-top:0.75rem;display:block;">每天呼叫次數</label>
+<input id="costCalls" type="number" value="50" style="width:100%;padding:0.5rem;border:2px solid var(--ink);margin-top:0.3rem;" oninput="calcCost()">
+</div>
+<div style="border:3px solid var(--ink);padding:1.5rem;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+<div style="font-size:0.85rem;opacity:0.7;">預估月費</div>
+<div id="costResult" style="font-family:Bebas Neue,sans-serif;font-size:3rem;color:var(--accent);">$0.00</div>
+<div style="font-size:0.8rem;opacity:0.7;margin-top:0.5rem;">
+<span id="costDaily">日費: $0.00</span> · <span id="costTokens">月 tokens: 0</span>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Debug Flow Trainer -->
+<div class="highlight-box reveal" id="debugTrainer">
+<h4>Debug 流程訓練器</h4>
+<p>遇到以下 Bug，你的下一步應該是什麼？</p>
+<div id="debugScenario" style="background:var(--ink);color:var(--paper);padding:1rem;font-family:JetBrains Mono,monospace;font-size:0.8rem;margin:1rem 0;border:2px solid var(--ink);">
+TypeError: Cannot read properties of undefined (reading 'map')<br>at ProductList (src/ProductList.tsx:15:22)
+</div>
+<div id="debugOptions" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+<div id="debugFeedback" style="margin-top:0.75rem;padding:0.75rem;display:none;border:2px solid var(--ink);font-size:0.85rem;"></div>
+<div style="margin-top:0.75rem;display:flex;gap:0.5rem;">
+<button class="btn" id="debugPrevBtn" onclick="prevDebugQ()">← 上一題</button>
+<span id="debugCounter" style="font-family:JetBrains Mono,monospace;font-size:0.85rem;align-self:center;"></span>
+<button class="btn" id="debugNextBtn" onclick="nextDebugQ()">下一題 →</button>
+</div>
+</div>
+
+<!-- Workflow Quiz -->
+<div class="quiz-box reveal" id="t6QuizBox">
+<h3>情境練習：開發工作流</h3>
+<div id="t6QuizPrompt"></div>
+<div id="t6QuizOptions"></div>
+<div id="t6QuizFeedback"></div>
+<div class="quiz-controls">
+<button class="btn" id="t6QuizPrev" onclick="t6QuizNav(-1)">← 上一題</button>
+<span id="t6QuizCounter"></span>
+<button class="btn" id="t6QuizNext" onclick="t6QuizNav(1)">下一題 →</button>
+</div>
+</div>
+
+<script>
+(function(){
+  // Temperature Playground
+  const tempOutputs = {
+    0: 'JavaScript 是一種動態型別的直譯式程式語言，主要用於網頁開發。',
+    3: 'JavaScript 是讓網頁動起來的程式語言，從按鈕到動畫都靠它。',
+    7: 'JavaScript 就像網頁的神經系統——看不到但控制一切互動。',
+    10: 'JS 是那個在派對上什麼都能聊的朋友，前端後端都行，雖然偶爾講話前後矛盾。',
+    14: 'JavaScript 是一隻會變形的章魚，觸手伸進瀏覽器、伺服器、手機、甚至太空船的控制面板裡跳舞。',
+    20: '想像一下如果你把咖啡因、彩虹糖和一本哲學書丟進果汁機——出來的液體就是 JavaScript 的精神狀態。'
+  };
+  const tempExplains = {
+    0: '☞ Temperature 0：完全確定性輸出。每次問都一樣，適合需要一致性的場景（如 code generation）。',
+    3: '☞ Temperature 0.3：微帶創意但仍穩定。適合技術寫作、文件產出。',
+    7: '☞ Temperature 0.7：平衡點。多數通用對話用這個。',
+    10: '☞ Temperature 1.0：高創意。適合腦力激盪、行銷文案。但可能偏離重點。',
+    14: '☞ Temperature 1.4：非常隨機。偶爾有驚喜，但常常不可控。',
+    20: '☞ Temperature 2.0：幾乎是亂數。幾乎不實用，但很有趣。'
+  };
+  window.updateTemp = function() {
+    const v = parseInt(document.getElementById('tempSlider').value);
+    document.getElementById('tempVal').textContent = (v/10).toFixed(1);
+    const keys = Object.keys(tempOutputs).map(Number).sort((a,b)=>a-b);
+    let closest = keys[0];
+    for (const k of keys) { if (k <= v) closest = k; }
+    document.getElementById('tempOutput').textContent = tempOutputs[closest];
+    document.getElementById('tempExplain').textContent = tempExplains[closest];
+  };
+
+  // RCAF Presets
+  const rcafPresets = {
+    api: {r:'你是資深 Node.js 後端工程師',c:'Express + PostgreSQL 專案，已有 users 表',a:'新增 todos CRUD API，含驗證和 error handling',f:'TypeScript，每個檔案分開附路徑'},
+    refactor: {r:'你是 Clean Code 專家',c:'這個 300 行的函數做了太多事，混合了 DB 查詢和業務邏輯',a:'重構成 Service + Repository pattern，拆成多個小函數',f:'保持原有功能不變，附重構前後對比'},
+    debug: {r:'你是 Debug 專家',c:'React app 在切換頁面時 state 沒清除，造成顯示舊資料',a:'1) 解釋為什麼 2) 給出三種解法 3) 推薦最佳',f:'每種解法附程式碼和優缺點比較表'},
+    test: {r:'你是測試工程師',c:'一個 calculateDiscount() 函數，接收 price 和 couponCode',a:'撰寫完整單元測試，涵蓋正常、邊界、異常情境',f:'用 Jest + describe/it 結構，至少 8 個 test case'},
+    review: {r:'你是 Senior Code Reviewer',c:'Junior 同事提交的 PR，功能是使用者登入',a:'做 code review：找出 bug、安全問題、可改善處',f:'用表格列出：嚴重度/位置/問題/建議修法'}
+  };
+  window.loadRcafPreset = function() {
+    const v = document.getElementById('rcafPresets').value;
+    if (!v) return;
+    const p = rcafPresets[v];
+    document.getElementById('rcafR2').value = p.r;
+    document.getElementById('rcafC2').value = p.c;
+    document.getElementById('rcafA2').value = p.a;
+    document.getElementById('rcafF2').value = p.f;
+    updateRcafPreview2();
+  };
+  window.updateRcafPreview2 = function() {
+    const r=document.getElementById('rcafR2')?.value?.trim()||'';
+    const c=document.getElementById('rcafC2')?.value?.trim()||'';
+    const a=document.getElementById('rcafA2')?.value?.trim()||'';
+    const f=document.getElementById('rcafF2')?.value?.trim()||'';
+    const preview=document.getElementById('rcafPreview2');
+    if(!preview)return;
+    if(!r&&!c&&!a&&!f){preview.innerHTML='<span class="rcaf-placeholder">← 選模板或自己填寫...</span>';return;}
+    let out='';
+    if(r)out+='[Role] '+r+'\n\n';
+    if(c)out+='[Context] '+c+'\n\n';
+    if(a)out+='[Action] '+a+'\n\n';
+    if(f)out+='[Format] '+f;
+    preview.textContent=out;
+  };
+
+  // Task Decomposer
+  const decompositions = {
+    ecommerce: {
+      bad: '幫我做一個完整的電商網站，要有會員系統、購物車、金流串接、後台管理、部署到 AWS。',
+      good: ['Phase 1 — Plan：技術選型 + DB schema 設計 (Day 1)','Phase 2 — Auth：註冊/登入/忘記密碼 (Day 2-3)','Phase 3 — Product：商品 CRUD + 圖片上傳 (Day 4-5)','Phase 4 — Cart：購物車邏輯 + 結帳流程 (Day 6-7)','Phase 5 — Payment：串接金流 sandbox (Day 8-9)','Phase 6 — Deploy：CI/CD + 上線 (Day 10)']
+    },
+    chatbot: {
+      bad: '做一個能回答所有問題的 AI 客服機器人，要接所有平台。',
+      good: ['Phase 1 — 限定範圍：只回答 FAQ 前 20 題 (Day 1)','Phase 2 — RAG：把 FAQ 文件向量化 + 建 retrieval (Day 2-3)','Phase 3 — Bot：接一個平台（LINE 或 Discord）(Day 4-5)','Phase 4 — Fallback：不會回答時轉人工 (Day 6)','Phase 5 — Monitor：記錄對話 + 分析失敗率 (Day 7)']
+    },
+    dashboard: {
+      bad: '做一個可以看所有資料的儀表板，要即時更新還要很漂亮。',
+      good: ['Phase 1 — 定義 3 個最重要的 KPI (Day 1)','Phase 2 — 資料源：接 API 或 DB，做 mock data (Day 2)','Phase 3 — 圖表：用 Chart.js 做 3 個核心圖 (Day 3-4)','Phase 4 — Layout：RWD 排版 + 篩選器 (Day 5)','Phase 5 — 自動刷新：WebSocket 或 polling (Day 6-7)']
+    },
+    mobile: {
+      bad: '做一個像 Instagram 的 App，要有貼文、限動、訊息、推薦演算法。',
+      good: ['Phase 1 — 只做「發一張照片 + 看 feed」(Day 1-2)','Phase 2 — React Native 或 Flutter 基本框架 (Day 3)','Phase 3 — 後端 API：上傳圖片 + 取 feed (Day 4-5)','Phase 4 — 基本互動：按讚 + 留言 (Day 6-7)','Phase 5 — 打包 APK/IPA 可安裝 (Day 8)']
+    }
+  };
+  window.showDecomposition = function() {
+    const v = document.getElementById('decomposeSelect').value;
+    const result = document.getElementById('decomposeResult');
+    if (!v) { result.style.display='none'; return; }
+    result.style.display='block';
+    const d = decompositions[v];
+    document.getElementById('decomposeBadCode').textContent = '❌ Bad: "' + d.bad + '"';
+    const list = document.getElementById('decomposeGood');
+    list.innerHTML = d.good.map(s => '<li>' + s + '</li>').join('');
+  };
+
+  // Rate Limit Simulator
+  window.simulateRateLimit = async function() {
+    const bar=document.getElementById('rateLimitFill');
+    const label=document.getElementById('rateLimitLabel');
+    const log=document.getElementById('rateLimitLog');
+    log.innerHTML='';
+    let count=0;const max=60;
+    function addLog(msg,color){log.innerHTML+='<div style="color:'+color+'">'+msg+'</div>';log.scrollTop=log.scrollHeight;}
+    for(let i=0;i<80;i++){
+      await new Promise(r=>setTimeout(r,60));
+      count++;
+      const pct=Math.min((count/max)*100,100);
+      bar.style.width=pct+'%';
+      bar.style.background=count<=max?'var(--green)':count<=max*1.1?'var(--yellow)':'var(--accent)';
+      label.textContent=Math.min(count,max)+' / '+max+' RPM';
+      if(count<=max){addLog('['+count+'] ✓ 200 OK','#00c853');}
+      else if(count===max+1){addLog('['+count+'] ✗ 429 Rate Limited — backing off...','#ff5722');await new Promise(r=>setTimeout(r,800));addLog('    ↳ wait 1s...','#fbc02d');}
+      else if(count===max+5){addLog('[retry] ✓ 200 OK — recovered','#00c853');bar.style.background='var(--green)';count=1;bar.style.width='2%';label.textContent='1 / 60 RPM';}
+      else if(count>max){addLog('['+count+'] ✗ 429 — wait '+(count-max)+'s','#ff5722');}
+    }
+  };
+
+  // Cost Estimator
+  const pricing={gpt4o:{in:2.5,out:10},'claude-sonnet':{in:3,out:15},'claude-haiku':{in:0.25,out:1.25},'gpt4o-mini':{in:0.15,out:0.6}};
+  window.calcCost = function() {
+    const model=document.getElementById('costModel').value;
+    const inp=parseInt(document.getElementById('costInput').value)||0;
+    const out=parseInt(document.getElementById('costOutput').value)||0;
+    const calls=parseInt(document.getElementById('costCalls').value)||0;
+    const p=pricing[model];
+    const daily=(inp*p.in+out*p.out)*calls/1000000;
+    const monthly=daily*30;
+    document.getElementById('costResult').textContent='$'+monthly.toFixed(2);
+    document.getElementById('costDaily').textContent='日費: $'+daily.toFixed(3);
+    document.getElementById('costTokens').textContent='月 tokens: '+((inp+out)*calls*30/1000000).toFixed(1)+'M';
+  };
+  setTimeout(calcCost,100);
+
+  // Debug Flow Trainer
+  const debugQs=[
+    {scenario:'TypeError: Cannot read properties of undefined (reading \'map\')\nat ProductList (src/ProductList.tsx:15:22)',options:['直接叫 AI 幫我修','先看第 15 行程式碼，理解 map 是對什麼呼叫的','重裝 node_modules'],correct:1,fb:'正確！先理解哪個變數是 undefined，才能判斷修法。可能是 API 資料還沒回來就 render 了。'},
+    {scenario:'CORS error: Access-Control-Allow-Origin header missing\nFailed to fetch http://localhost:3001/api/users',options:['在前端加 no-cors mode','在後端加 CORS middleware','改用 JSONP'],correct:1,fb:'正確！CORS 是後端問題，需要在 API server 加上適當的 Access-Control headers。'},
+    {scenario:'Warning: Each child in a list should have a unique "key" prop.\nat UserList',options:['忽略，只是 warning 不影響功能','在 map() 的 JSX 加上 key={item.id}','用 index 當 key 就好'],correct:1,fb:'正確！用 item 的唯一 ID 當 key，幫 React 追蹤哪些元素變了。用 index 在排序/刪除時會出 bug。'},
+    {scenario:'Module not found: Can\'t resolve \'@/components/Button\'\nat ./src/pages/Home.tsx',options:['確認 tsconfig.json 的 paths alias 設定','重新安裝所有 dependencies','把 @ 改成相對路徑 ../'],correct:0,fb:'正確！@ alias 需要在 tsconfig.json（或 vite.config）裡設定 paths mapping。確認 baseUrl 和 paths 都正確。'}
+  ];
+  let debugIdx=0;
+  function renderDebugQ(){
+    var q=debugQs[debugIdx];
+    document.getElementById('debugScenario').innerHTML=q.scenario.replace(/
+/g,'<br>');
+    var opts=document.getElementById('debugOptions');
+    opts.innerHTML='';
+    q.options.forEach(function(o,i){
+      var b=document.createElement('button');
+      b.className='scenario-option';
+      b.textContent=o;
+      b.onclick=function(){
+        opts.querySelectorAll('.scenario-option').forEach(function(el,j){
+          if(j===q.correct)el.classList.add('correct');
+          else if(j===i)el.classList.add('wrong');
+        });
+        var fb=document.getElementById('debugFeedback');
+        fb.style.display='block';
+        fb.innerHTML=(i===q.correct?'<strong style="color:var(--green)">✓ </strong>':'<strong style="color:var(--accent)">✗ </strong>')+q.fb;
+      };
+      opts.appendChild(b);
+    });
+    document.getElementById('debugFeedback').style.display='none';
+    document.getElementById('debugCounter').textContent=(debugIdx+1)+' / '+debugQs.length;
+  }
+  window.nextDebugQ=function(){debugIdx=(debugIdx+1)%debugQs.length;renderDebugQ();};
+  window.prevDebugQ=function(){debugIdx=(debugIdx-1+debugQs.length)%debugQs.length;renderDebugQ();};
+  setTimeout(renderDebugQ,50);
+
+  // T6 Quiz
+  var t6Qs=[
+    {prompt:'你遇到 bug，直接跟 AI 說「這壞了，幫我修」。這做法？',options:[{text:'沒問題，AI 夠聰明',correct:false,fb:'AI 不是通靈師。沒 error log、沒 context，只能瞎猜。'},{text:'不好，應該附上 error + context',correct:true,fb:'對。附上錯誤訊息、重現步驟、環境版本，AI 才能精準定位。'},{text:'可以，多問幾次就好',correct:false,fb:'垃圾進垃圾出。context 不夠，問 100 次也是猜。'}]},
+    {prompt:'Temperature 設成 0 適合什麼場景？',options:[{text:'寫詩和創意文案',correct:false,fb:'創意任務需要隨機性。'},{text:'程式碼生成和需要一致性的任務',correct:true,fb:'Temperature 0 = 確定性輸出，code gen 最適合。'},{text:'日常聊天',correct:false,fb:'聊天用 0.7 比較自然。'}]},
+    {prompt:'API 回傳 429 錯誤，你應該？',options:[{text:'立刻瘋狂重試',correct:false,fb:'瘋狂重試只會更嚴重。'},{text:'用 Exponential Backoff 等待後重試',correct:true,fb:'指數退避逐漸等更久，避免衝撞。'},{text:'放棄不做了',correct:false,fb:'等一下就好。Rate limit 是暫時的。'}]},
+    {prompt:'哪種任務最不該交給 AI 直接做？',options:[{text:'產生 boilerplate code',correct:false,fb:'boilerplate 正是 AI 強項。'},{text:'資安相關的核心決策',correct:true,fb:'AI 可能忽略邊界情況。資安決策必須人類審核。'},{text:'寫 README 文件',correct:false,fb:'README 交給 AI 沒問題。'}]}
+  ];
+  var t6QIdx=0;
+  function renderT6Quiz(){
+    var q=t6Qs[t6QIdx];
+    document.getElementById('t6QuizPrompt').innerHTML=q.prompt;
+    var opts=document.getElementById('t6QuizOptions');
+    var fb=document.getElementById('t6QuizFeedback');
+    fb.classList.remove('show');opts.innerHTML='';
+    q.options.forEach(function(o,i){
+      var b=document.createElement('button');
+      b.className='scenario-option';
+      b.textContent=o.text;
+      b.onclick=function(){
+        opts.querySelectorAll('.scenario-option').forEach(function(el,j){
+          if(q.options[j].correct)el.classList.add('correct');
+          else if(j===i)el.classList.add('wrong');
+        });
+        fb.innerHTML='<span class="fb-label">'+(o.correct?'CORRECT':'NOT QUITE')+'</span>'+o.fb;
+        fb.classList.add('show');
+      };
+      opts.appendChild(b);
+    });
+    document.getElementById('t6QuizCounter').textContent=(t6QIdx+1)+' / '+t6Qs.length;
+  }
+  window.t6QuizNav=function(dir){t6QIdx=(t6QIdx+dir+t6Qs.length)%t6Qs.length;renderT6Quiz();};
+  setTimeout(renderT6Quiz,50);
+})();
+</script>

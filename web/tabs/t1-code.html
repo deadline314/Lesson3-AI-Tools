@@ -1,0 +1,393 @@
+<div class="panel-header">
+<span class="panel-num">Q1</span>
+<h2>讓 AI 幫你寫程式</h2>
+</div>
+
+<p class="intro">2026 年寫程式有兩大流派：<span class="tip" data-tip-key="ide-style">IDE 整合派</span>（以 Cursor 為代表）和 <span class="tip" data-tip-key="cli-style">CLI Agent 派</span>（以 Claude Code 為代表）。前者把 AI 嵌進編輯器，打字就有建議；後者讓 AI 擁有終端機的完整控制權，能自己讀檔、改檔、跑測試。兩者不互斥——很多人同時用。</p>
+
+<div class="tool-grid reveal">
+<div class="tool-card">
+<div class="tool-tag">CLI · Agent · v2.1</div>
+<h3 class="tool-name">CLAUDE CODE</h3>
+<p class="tool-desc">Anthropic 官方的終端 AI Agent，直接在你的 terminal 裡幫你讀專案、寫程式、跑測試、送 PR。</p>
+<ul class="feature-list">
+<li><span class="tip" data-tip-key="cc-agentic">Agentic Loop</span></li>
+<li><span class="tip" data-tip-key="cc-context">Context Engineering</span></li>
+<li><span class="tip" data-tip-key="cc-permission">Permission System</span></li>
+<li><span class="tip" data-tip-key="cc-remote">Remote Control</span></li>
+<li><span class="tip" data-tip-key="cc-cloud">Cloud Agents</span></li>
+<li><span class="tip" data-tip-key="cc-skills">Skills 系統</span></li>
+<li><span class="tip" data-tip-key="cc-mcp">MCP 連結器</span></li>
+<li><span class="tip" data-tip-key="cc-subagent">Sub-agent</span></li>
+</ul>
+</div>
+
+<div class="tool-card">
+<div class="tool-tag">IDE · 2026.04</div>
+<h3 class="tool-name">CURSOR 3</h3>
+<p class="tool-desc">以 VS Code 為基底，內建 AI 超能力的編輯器。從自動補全到全專案 Agent，三層互動一次滿足。</p>
+<ul class="feature-list">
+<li><span class="tip" data-tip-key="cur-tab">Tab 自動補全</span></li>
+<li><span class="tip" data-tip-key="cur-cmd">Cmd+K</span></li>
+<li><span class="tip" data-tip-key="cur-composer">Composer 2</span></li>
+<li><span class="tip" data-tip-key="cur-agent">Agents Window</span></li>
+<li><span class="tip" data-tip-key="cur-design">Design Mode</span></li>
+<li><span class="tip" data-tip-key="cur-bugbot">Bugbot</span></li>
+</ul>
+</div>
+</div>
+
+<!-- ═══ CLAUDE CODE ARCHITECTURE DIAGRAM ═══ -->
+<div class="cc-architecture reveal">
+<h3 class="canvas-title">CLAUDE CODE 架構圖</h3>
+<p style="text-align:center;font-size:0.82rem;color:var(--ink-soft);margin-bottom:1.5rem;">點擊任何節點查看詳細說明</p>
+<div class="cc-arch-flow">
+<div class="cc-arch-layer cc-layer-input">
+<div class="cc-arch-node" data-arch="terminal">
+<span class="cc-arch-icon">⌨️</span>
+<span class="cc-arch-label">Your Terminal</span>
+</div>
+</div>
+<div class="cc-arch-arrow">↓</div>
+<div class="cc-arch-layer cc-layer-brain">
+<div class="cc-arch-node" data-arch="brain">
+<span class="cc-arch-icon">🧠</span>
+<span class="cc-arch-label">Claude Opus 4.7 / Sonnet 4.6</span>
+<span class="cc-arch-sublabel">The Brain</span>
+</div>
+</div>
+<div class="cc-arch-arrow">↓</div>
+<div class="cc-arch-layer cc-layer-tools">
+<div class="cc-arch-node" data-arch="read-write">
+<span class="cc-arch-icon">📁</span>
+<span class="cc-arch-label">Read/Write/Edit</span>
+</div>
+<div class="cc-arch-node" data-arch="bash">
+<span class="cc-arch-icon">💻</span>
+<span class="cc-arch-label">Bash</span>
+</div>
+<div class="cc-arch-node" data-arch="search">
+<span class="cc-arch-icon">🔍</span>
+<span class="cc-arch-label">Grep/Glob</span>
+</div>
+<div class="cc-arch-node" data-arch="web">
+<span class="cc-arch-icon">🌐</span>
+<span class="cc-arch-label">Web</span>
+</div>
+<div class="cc-arch-node" data-arch="task">
+<span class="cc-arch-icon">🔀</span>
+<span class="cc-arch-label">Sub-agent</span>
+</div>
+<div class="cc-arch-node" data-arch="mcp">
+<span class="cc-arch-icon">🔌</span>
+<span class="cc-arch-label">MCP</span>
+</div>
+</div>
+<div class="cc-arch-arrow">↓</div>
+<div class="cc-arch-layer cc-layer-output">
+<div class="cc-arch-node" data-arch="fs">
+<span class="cc-arch-icon">📂</span>
+<span class="cc-arch-label">File System / Git / Cloud</span>
+</div>
+</div>
+</div>
+<div class="cc-arch-detail" id="ccArchDetail">
+<p>👆 點擊上方任何節點，這裡會顯示詳細說明。</p>
+</div>
+</div>
+
+<!-- ═══ AGENTIC LOOP ═══ -->
+<div class="accordion">
+<div class="accordion-trigger">Claude Code Deep Dive</div>
+<div class="accordion-content">
+<h4>Agentic Loop（代理循環）</h4>
+<p>Claude Code 不是一問一答——它跑一個持續循環，直到任務完成：</p>
+<ol class="step-list">
+<li><strong>Receive</strong> — 接收你的指令或上一輪結果</li>
+<li><strong>Decompose</strong> — 把大任務拆成子步驟</li>
+<li><strong>Select Tools</strong> — 決定要讀檔 / 寫檔 / 跑指令 / 搜尋</li>
+<li><strong>Execute</strong> — 執行工具、拿到結果</li>
+<li><strong>Evaluate</strong> — 檢查結果是否符合預期</li>
+<li><strong>Loop / Report</strong> — 沒完成就回到 2；完成就回報</li>
+</ol>
+<h4>Context Engineering</h4>
+<p>CLAUDE.md 是你放在專案根目錄的設定檔，讓 Claude Code 認識你的專案。該放什麼：</p>
+<ul>
+<li>專案架構總覽</li>
+<li>coding style / 命名慣例</li>
+<li>常用指令（build / test / deploy）</li>
+<li>不能碰的檔案或目錄</li>
+<li>PR / commit message 格式</li>
+</ul>
+<h4>安裝</h4>
+<div class="code-block">
+<pre><code>npm install -g @anthropic-ai/claude-code
+claude
+/init</code></pre>
+</div>
+</div>
+</div>
+
+<!-- ═══ PERMISSION SYSTEM ═══ -->
+<div class="accordion">
+<div class="accordion-trigger">Permission System（權限系統）</div>
+<div class="accordion-content">
+<p>Claude Code 改檔案前會先問你同意。三種模式：</p>
+<table class="compare-table">
+<thead><tr><th>模式</th><th>行為</th><th>適合誰</th><th>風險</th></tr></thead>
+<tbody>
+<tr><td>Normal（預設）</td><td>每次改檔前問 Y/N</td><td>新手、敏感專案</td><td>低</td></tr>
+<tr><td>Accept Edits</td><td>自動接受檔案修改</td><td>熟手、信任 AI</td><td>中</td></tr>
+<tr><td>Full Auto</td><td>連 bash 都自動跑</td><td>CI/CD、沙盒環境</td><td>高</td></tr>
+</tbody>
+</table>
+
+<div class="permission-toggle-demo">
+<h4>互動 Demo：切換權限等級</h4>
+<div class="permission-levels">
+<button class="permission-btn active" data-perm="normal">🔒 Normal</button>
+<button class="permission-btn" data-perm="accept">🔓 Accept Edits</button>
+<button class="permission-btn" data-perm="auto">⚡ Full Auto</button>
+</div>
+<div class="permission-display" id="permissionDisplay">
+<div class="perm-scenario">Claude Code 想要：<code>edit_file("src/api.py", line=42)</code></div>
+<div class="perm-response" id="permResponse">
+<span class="perm-prompt">Allow edit to src/api.py? [Y/n]</span>
+<span class="perm-status">⏸ 等待你的許可...</span>
+</div>
+</div>
+</div>
+<p class="highlight-box">新手建議：先用 Normal 模式養成看 diff 的習慣。熟了再開 Accept Edits 加速。</p>
+</div>
+</div>
+
+<!-- ═══ CURSOR THREE LAYERS ═══ -->
+<div class="accordion">
+<div class="accordion-trigger">Cursor 三層互動</div>
+<div class="accordion-content">
+<p>Cursor 的 AI 功能分三層，自主性由低到高：</p>
+<ul>
+<li><strong>Layer 1：Tab 補全</strong> — 打字時自動建議下一段程式碼，按 Tab 接受。最低自主性，你完全掌控。</li>
+<li><strong>Layer 2：Cmd+K</strong> — 選取程式碼後按 Cmd+K 給指令，AI 幫你改寫、產生、翻譯那段程式碼。中度自主性。</li>
+<li><strong>Layer 3：Composer / Agent</strong> — 給一個目標，AI 自己找檔案、改多檔、跑終端機。最高自主性。</li>
+</ul>
+<table class="compare-table">
+<thead><tr><th>層級</th><th>觸發方式</th><th>影響範圍</th><th>自主性</th><th>用的模型</th></tr></thead>
+<tbody>
+<tr><td>Tab</td><td>打字自動觸發</td><td>游標附近數行</td><td>★☆☆</td><td>Composer 2（速度優先）</td></tr>
+<tr><td>Cmd+K</td><td>選取 + 快捷鍵</td><td>選取區塊</td><td>★★☆</td><td>Composer 2 / Sonnet</td></tr>
+<tr><td>Agent</td><td>Chat 輸入目標</td><td>整個專案</td><td>★★★</td><td>Claude / GPT（智能優先）</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ═══ CLAUDE CODE VS CURSOR ═══ -->
+<div class="accordion">
+<div class="accordion-trigger">Claude Code vs Cursor 怎麼選</div>
+<div class="accordion-content">
+<table class="compare-table">
+<thead><tr><th>情境</th><th>推薦工具</th><th>原因</th></tr></thead>
+<tbody>
+<tr><td>想邊寫邊即時補全</td><td>Cursor</td><td>Tab 補全即時回饋</td></tr>
+<tr><td>大規模重構</td><td>Claude Code</td><td>Agent 可跨檔操作 + 跑測試驗證</td></tr>
+<tr><td>新手剛學程式</td><td>Cursor</td><td>視覺化 IDE 門檻低</td></tr>
+<tr><td>CI/CD 自動修 bug</td><td>Claude Code</td><td>CLI 可被腳本呼叫</td></tr>
+<tr><td>設計稿轉 UI</td><td>Cursor</td><td>Design Mode 吃 Figma</td></tr>
+<tr><td>Legacy 大專案</td><td>Claude Code</td><td>Context 讀整棵樹更強</td></tr>
+<tr><td>兩個都想用</td><td>兩者並用</td><td>Cursor 寫、Claude Code review + test</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ═══ CONTEXT WINDOW VISUALIZATION ═══ -->
+<div class="context-window-viz reveal">
+<h3>Context Window 視覺化</h3>
+<p style="font-size:0.85rem;color:var(--ink-soft);margin-bottom:1rem;">拉動 slider 看：塞太多 context 會怎樣？</p>
+<div class="ctx-slider-area">
+<label style="font-size:0.82rem;font-weight:700;">Context 填充率：<span id="ctxPercent">30%</span></label>
+<input type="range" id="ctxSlider" min="10" max="100" value="30" step="5">
+</div>
+<div class="ctx-bar-container">
+<div class="ctx-bar" id="ctxBar">
+<div class="ctx-segment ctx-system" id="ctxSystem" style="width:15%">System</div>
+<div class="ctx-segment ctx-code" id="ctxCode" style="width:10%">Code</div>
+<div class="ctx-segment ctx-user" id="ctxUser" style="width:5%">User</div>
+<div class="ctx-segment ctx-empty" id="ctxEmpty" style="width:70%"></div>
+</div>
+<div class="ctx-labels">
+<span>0</span><span>50K</span><span>100K</span><span>150K</span><span>200K tokens</span>
+</div>
+</div>
+<div class="ctx-feedback" id="ctxFeedback">
+<div class="ctx-attention">
+<span class="ctx-attention-label">注意力集中度</span>
+<div class="ctx-attention-bar"><div class="ctx-attention-fill" id="ctxAttentionFill" style="width:90%"></div></div>
+<span class="ctx-attention-value" id="ctxAttentionVal">90%</span>
+</div>
+<p class="ctx-explanation" id="ctxExplanation">Context 使用率低，AI 能完全專注在你的問題上。回答品質最高。</p>
+</div>
+</div>
+
+<!-- ═══ CLAUDE.MD BUILDER ═══ -->
+<div class="claudemd-builder reveal">
+<h3>📝 CLAUDE.md 產生器</h3>
+<p style="font-size:0.85rem;color:var(--ink-soft);margin-bottom:1.5rem;">填入你的專案資訊，自動產出一份 CLAUDE.md 模板。</p>
+<div class="claudemd-grid">
+<div class="claudemd-inputs">
+<div class="claudemd-field">
+<label>專案名稱：</label>
+<input type="text" id="cmdName" placeholder="例：my-todo-app" class="rcaf-input">
+</div>
+<div class="claudemd-field">
+<label>技術棧：</label>
+<input type="text" id="cmdStack" placeholder="例：Next.js 14 + TypeScript + Supabase" class="rcaf-input">
+</div>
+<div class="claudemd-field">
+<label>Build 指令：</label>
+<input type="text" id="cmdBuild" placeholder="例：npm run build" class="rcaf-input">
+</div>
+<div class="claudemd-field">
+<label>Test 指令：</label>
+<input type="text" id="cmdTest" placeholder="例：npm test 或 make test" class="rcaf-input">
+</div>
+<div class="claudemd-field">
+<label>Lint 指令：</label>
+<input type="text" id="cmdLint" placeholder="例：npm run lint 或 make fix" class="rcaf-input">
+</div>
+<div class="claudemd-field">
+<label>Code Style 重點（逗號分隔）：</label>
+<input type="text" id="cmdStyle" placeholder="例：no comments, constants at top, no try-import" class="rcaf-input">
+</div>
+<div class="claudemd-field">
+<label>不能碰的檔案/目錄（逗號分隔）：</label>
+<input type="text" id="cmdForbid" placeholder="例：.env, secrets/, node_modules/" class="rcaf-input">
+</div>
+<div class="claudemd-field">
+<label>PR / Commit 格式：</label>
+<input type="text" id="cmdCommit" placeholder="例：conventional commits (feat: / fix: / chore:)" class="rcaf-input">
+</div>
+<button id="cmdGenerate" class="btn btn-primary">⚡ 產生 CLAUDE.md</button>
+</div>
+<div class="claudemd-output">
+<label>產出的 CLAUDE.md</label>
+<div class="claudemd-preview" id="cmdPreview">
+<span class="rcaf-placeholder">← 在左邊填寫，這裡會即時產出...</span>
+</div>
+<button id="cmdCopy" class="btn">📋 複製</button>
+</div>
+</div>
+</div>
+
+<!-- ═══ SCENARIO QUIZ ═══ -->
+<div class="quiz-box" id="scenarioBox">
+<h3>情境練習：你會怎麼挑工具？</h3>
+<div id="scenarioPrompt"></div>
+<div id="scenarioOptions"></div>
+<div id="scenarioFeedback"></div>
+<div class="quiz-controls">
+<button id="scenarioPrev" class="btn">← 上一題</button>
+<span id="scenarioCounter"></span>
+<button id="scenarioNext" class="btn">下一題 →</button>
+</div>
+</div>
+
+<!-- ═══ PROMPT SIMULATOR ═══ -->
+<div class="prompt-sim">
+<div class="prompt-sim-header">
+<h3>PROMPT 對照模擬器</h3>
+<div class="prompt-tabs">
+<button class="prompt-tab active" data-prompt="bad">Bad</button>
+<button class="prompt-tab" data-prompt="good">Good</button>
+</div>
+</div>
+<div class="prompt-sim-body">
+<div class="prompt-box">
+<label>INPUT</label>
+<div id="promptInput" class="prompt-display"></div>
+</div>
+<div class="prompt-box">
+<label>OUTPUT</label>
+<div id="promptOutput" class="prompt-display"></div>
+</div>
+</div>
+<div class="prompt-legend">
+<span class="legend-item"><span class="legend-color rcaf-r"></span> R — Role 角色</span>
+<span class="legend-item"><span class="legend-color rcaf-c"></span> C — Context 背景</span>
+<span class="legend-item"><span class="legend-color rcaf-a"></span> A — Action 動作</span>
+<span class="legend-item"><span class="legend-color rcaf-f"></span> F — Format 格式</span>
+</div>
+</div>
+
+<!-- ═══ TERMINAL DEMO (ENHANCED) ═══ -->
+<div class="terminal-demo reveal">
+<div class="terminal-header">
+<div class="terminal-dots"><span></span><span></span><span></span></div>
+<span class="terminal-title">Claude Code — 終端機模擬</span>
+</div>
+<div class="terminal-body" id="terminalBody">
+<div class="terminal-line prompt-line">$ claude "幫我重構 utils.py，拆成三個模組"</div>
+</div>
+<div class="terminal-controls">
+<button id="terminalPlay" class="btn btn-primary">▶ 啟動模擬</button>
+<button id="terminalReset" class="btn">↺ Reset</button>
+<select id="terminalScenario" style="font-size:0.82rem;padding:0.4rem 0.75rem;border:2px solid var(--ink);border-radius:var(--radius);">
+<option value="refactor">重構 utils.py</option>
+<option value="test">補測試 + CI</option>
+<option value="debug">Debug TypeError</option>
+</select>
+</div>
+</div>
+
+<!-- ═══ TYPING DEMO ═══ -->
+<div class="typing-demo reveal">
+<div class="typing-header">
+<span class="typing-badge">LIVE DEMO</span>
+<h3>Cursor Tab 補全動畫</h3>
+<p>看 AI 怎麼在你打字的同時預測下一段程式碼</p>
+</div>
+<div class="typing-editor">
+<div class="typing-gutter"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+<div class="typing-code" id="typingCode"></div>
+</div>
+<div class="typing-controls">
+<button id="typingPlay" class="btn btn-primary">▶ 播放</button>
+<span class="typing-hint">觀察灰色字 = AI 建議，按 Tab 接受</span>
+</div>
+</div>
+
+<!-- ═══ MATCH GAME ═══ -->
+<div class="match-game reveal">
+<h3>拖拉配對：哪個工具最適合？</h3>
+<p class="match-desc">把右邊的工具拖到左邊對應的場景</p>
+<div class="match-board">
+<div class="match-scenarios">
+<div class="match-slot" data-answer="claude-code">
+<span class="match-scenario">要重構 500 行的舊程式碼並加測試</span>
+<div class="match-drop" data-slot="s1"></div>
+</div>
+<div class="match-slot" data-answer="cursor-tab">
+<span class="match-scenario">正在寫函數，想讓 AI 自動補完下一行</span>
+<div class="match-drop" data-slot="s2"></div>
+</div>
+<div class="match-slot" data-answer="n8n">
+<span class="match-scenario">每天自動讀 Slack 訊息並產出摘要 email</span>
+<div class="match-drop" data-slot="s3"></div>
+</div>
+<div class="match-slot" data-answer="comfyui">
+<span class="match-scenario">需要用同一風格批次產出 20 張 IG 貼文圖</span>
+<div class="match-drop" data-slot="s4"></div>
+</div>
+</div>
+<div class="match-tools" id="matchTools">
+<div class="match-tool" draggable="true" data-tool="cursor-tab">Cursor Tab</div>
+<div class="match-tool" draggable="true" data-tool="claude-code">Claude Code</div>
+<div class="match-tool" draggable="true" data-tool="comfyui">ComfyUI</div>
+<div class="match-tool" draggable="true" data-tool="n8n">n8n</div>
+</div>
+</div>
+<div id="matchResult" class="match-result"></div>
+<button id="matchCheck" class="btn btn-primary">✓ 檢查答案</button>
+<button id="matchReset" class="btn">↺ 重來</button>
+</div>

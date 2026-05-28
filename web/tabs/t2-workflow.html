@@ -1,0 +1,367 @@
+<div class="panel-header">
+<span class="panel-num">Q2</span>
+<h2>自動化工作流 — n8n</h2>
+</div>
+
+<p class="intro">n8n 是開源的<span class="tip" data-tip-key="workflow">視覺化工作流自動化工具</span>——用拖拉節點的方式把「事件觸發 → 資料處理 → 動作執行」串成自動化流程。搭配 AI Agent 節點，能在流程中嵌入會思考、會使用工具的 AI，實現智慧自動化。</p>
+
+<h3>費用比較</h3>
+<table class="compare-table">
+<thead>
+<tr><th>每月任務數</th><th>Zapier</th><th>n8n Cloud</th><th>Self-hosted</th></tr>
+</thead>
+<tbody>
+<tr><td>100</td><td>$29.99</td><td>$0（免費方案）</td><td>$0（自備主機）</td></tr>
+<tr><td>1,000</td><td>$29.99</td><td>$24</td><td>~$5（VPS）</td></tr>
+<tr><td>5,000</td><td>$73.50</td><td>$24</td><td>~$5</td></tr>
+<tr><td>20,000</td><td>$148.50</td><td>$60</td><td>~$10</td></tr>
+</tbody>
+</table>
+
+<h3>五大節點類型</h3>
+<p>n8n 的一切由節點組成，掌握這五類即可應付多數場景：</p>
+<div class="component-grid">
+<div class="component-card">
+<h4>🎯 Trigger</h4>
+<p>流程起點。監聽外部事件：Webhook、排程 Cron、信件到達、資料庫變更。</p>
+</div>
+<div class="component-card">
+<h4>⚡ Action</h4>
+<p>對外部服務執行操作：發信、寫入資料庫、呼叫 API、上傳檔案。</p>
+</div>
+<div class="component-card">
+<h4>🧠 AI Agent</h4>
+<p>智慧節點：內建 ReAct 循環，能思考、呼叫工具、觀察結果再決策。</p>
+</div>
+<div class="component-card">
+<h4>🔀 Logic</h4>
+<p>控制流向：IF 條件分支、Switch、Merge 合併、Loop 迴圈、Wait 等待。</p>
+</div>
+<div class="component-card">
+<h4>💻 Code</h4>
+<p>用 JavaScript 或 Python 撰寫任何自訂邏輯，完全自由。</p>
+</div>
+</div>
+
+<h3>Embedding Model vs Chat Model</h3>
+<div class="highlight-box">
+<p><strong>Embedding Model</strong>：把文字轉成一組數字向量（如 1536 維），用於比較相似度、搜尋。費用極低。</p>
+<p><strong>Chat Model</strong>：接收對話、產生自然語言回答。費用較高。</p>
+<div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
+<span style="background:var(--blue);color:#fff;padding:4px 10px;border-radius:4px">「今天天氣如何」</span>
+<span>→ Embedding →</span>
+<span style="background:var(--purple);color:#fff;padding:4px 10px;border-radius:4px;font-family:monospace;font-size:0.8em">[0.021, -0.87, 0.45, ... ×1536]</span>
+</div>
+<p style="margin-top:8px">兩者在 RAG 各司其職：Embedding 負責「搜尋」，Chat 負責「回答」。</p>
+</div>
+
+<h3>RAG 檢索增強生成</h3>
+<p>RAG 讓 AI 先從你的資料庫「查資料」再回答，分為 Indexing 與 Querying 兩階段：</p>
+<div id="ragPipeline" style="border:1px solid var(--ink-soft);border-radius:var(--radius);padding:20px;margin:16px 0">
+<div style="display:flex;gap:8px;margin-bottom:16px">
+<button class="btn btn-primary" onclick="playRag('indexing')">▶ Indexing 階段</button>
+<button class="btn" onclick="playRag('querying')">▶ Querying 階段</button>
+<button class="btn" onclick="resetRag()">↺ Reset</button>
+</div>
+<div style="display:flex;gap:4px;margin-bottom:12px">
+<span class="rag-indicator" data-phase="indexing" data-step="1" style="width:12px;height:12px;border-radius:50%;background:var(--ink-soft);transition:var(--transition)"></span>
+<span class="rag-indicator" data-phase="indexing" data-step="2" style="width:12px;height:12px;border-radius:50%;background:var(--ink-soft);transition:var(--transition)"></span>
+<span class="rag-indicator" data-phase="indexing" data-step="3" style="width:12px;height:12px;border-radius:50%;background:var(--ink-soft);transition:var(--transition)"></span>
+<span class="rag-indicator" data-phase="indexing" data-step="4" style="width:12px;height:12px;border-radius:50%;background:var(--ink-soft);transition:var(--transition)"></span>
+<span style="width:16px"></span>
+<span class="rag-indicator" data-phase="querying" data-step="1" style="width:12px;height:12px;border-radius:50%;background:var(--ink-soft);transition:var(--transition)"></span>
+<span class="rag-indicator" data-phase="querying" data-step="2" style="width:12px;height:12px;border-radius:50%;background:var(--ink-soft);transition:var(--transition)"></span>
+<span class="rag-indicator" data-phase="querying" data-step="3" style="width:12px;height:12px;border-radius:50%;background:var(--ink-soft);transition:var(--transition)"></span>
+<span class="rag-indicator" data-phase="querying" data-step="4" style="width:12px;height:12px;border-radius:50%;background:var(--ink-soft);transition:var(--transition)"></span>
+<span class="rag-indicator" data-phase="querying" data-step="5" style="width:12px;height:12px;border-radius:50%;background:var(--ink-soft);transition:var(--transition)"></span>
+</div>
+<div id="ragStage" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:60px;font-size:0.95em">
+<span style="color:var(--ink-soft)">按下按鈕開始動畫</span>
+</div>
+<div id="ragDesc" style="margin-top:12px;padding:10px;background:var(--paper-deep);border-radius:var(--radius);min-height:40px"></div>
+</div>
+
+<h3>AI Agent 節點內部結構</h3>
+<p>n8n 的 AI Agent 節點由四個子元件組合：</p>
+<div class="component-grid">
+<div class="component-card">
+<h4>💬 Chat Model</h4>
+<p>底層 LLM（GPT-4o、Claude、Gemini），負責思考與生成。</p>
+</div>
+<div class="component-card">
+<h4>🧠 Memory</h4>
+<p>對話記憶：Window Buffer / Summary / Vector Store Memory。</p>
+</div>
+<div class="component-card">
+<h4>🔧 Tools</h4>
+<p>Agent 可呼叫的能力：搜尋、查 DB、執行程式碼、呼叫 API。</p>
+</div>
+<div class="component-card">
+<h4>📋 Output Parser</h4>
+<p>將 LLM 回應結構化為 JSON / 表格，方便下游節點使用。</p>
+</div>
+</div>
+
+<h3>ReAct 循環動畫</h3>
+<div id="reactAnimator" style="border:1px solid var(--ink-soft);border-radius:var(--radius);padding:20px;margin:16px 0">
+<button class="btn btn-primary" onclick="playReact()">▶ Play ReAct Loop</button>
+<button class="btn" onclick="resetReact()">↺ Reset</button>
+<div id="reactStage" style="display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap;min-height:50px"></div>
+<div id="reactLog" style="margin-top:12px;font-family:monospace;font-size:0.85em;background:var(--paper-deep);padding:12px;border-radius:var(--radius);min-height:60px;white-space:pre-line"></div>
+</div>
+
+<h3>Function Calling 模型比較</h3>
+<table class="compare-table">
+<thead>
+<tr><th>模型</th><th>可靠度</th><th>並行呼叫</th><th>結構化輸出</th><th>備註</th></tr>
+</thead>
+<tbody>
+<tr><td>GPT-4o</td><td>⭐⭐⭐⭐⭐</td><td>✅</td><td>✅</td><td>業界標竿，n8n 預設支援</td></tr>
+<tr><td>Claude 3.5+</td><td>⭐⭐⭐⭐</td><td>✅</td><td>✅</td><td>Tool use 穩定，推理強</td></tr>
+<tr><td>Gemini 2.0</td><td>⭐⭐⭐⭐</td><td>✅</td><td>✅</td><td>多模態支援佳</td></tr>
+<tr><td>Llama 3.1+</td><td>⭐⭐⭐</td><td>有限</td><td>需微調</td><td>開源可自架，成本最低</td></tr>
+</tbody>
+</table>
+
+<h3>工作流範本庫</h3>
+<div id="workflowGallery">
+<div class="accordion">
+<button class="accordion-trigger" onclick="toggleGallery(this)">📊 Weekly Report Bot — 每週自動彙整資料並寄送摘要</button>
+<div class="accordion-content" style="display:none">
+<p><strong>流程：</strong>Cron Trigger → Google Sheets → AI Agent（GPT-4o-mini）→ Gmail</p>
+<p><strong>場景：</strong>每週一早上 9 點自動讀取上週工作紀錄，AI 撰寫摘要，寄給團隊。</p>
+<p><strong>月成本：</strong>~$0.50（每週一次）</p>
+<p><strong>部署時間：</strong>15 分鐘</p>
+</div>
+</div>
+<div class="accordion">
+<button class="accordion-trigger" onclick="toggleGallery(this)">🤖 Customer Service Classifier — 智慧客服分類與路由</button>
+<div class="accordion-content" style="display:none">
+<p><strong>流程：</strong>Webhook → AI Agent（RAG + 情緒分析）→ Switch → Slack / 自動回覆</p>
+<p><strong>場景：</strong>收到客戶訊息後，AI 從知識庫搜尋答案並判斷情緒，負面轉真人、正面自動回覆。</p>
+<p><strong>月成本：</strong>~$15（每日 100 則）</p>
+<p><strong>部署時間：</strong>30 分鐘</p>
+</div>
+</div>
+<div class="accordion">
+<button class="accordion-trigger" onclick="toggleGallery(this)">📈 Lead Scoring Pipeline — 潛在客戶評分流程</button>
+<div class="accordion-content" style="display:none">
+<p><strong>流程：</strong>Webhook → HTTP Request（CRM API）→ AI Agent（評分）→ Code（加權）→ Update CRM</p>
+<p><strong>場景：</strong>新名單進入時自動從 CRM 抓取互動歷史，AI 評估購買意願並打分。</p>
+<p><strong>月成本：</strong>~$8（每日 50 筆名單）</p>
+<p><strong>部署時間：</strong>45 分鐘</p>
+</div>
+</div>
+<div class="accordion">
+<button class="accordion-trigger" onclick="toggleGallery(this)">📝 Content Publishing Automation — 內容多平台發佈</button>
+<div class="accordion-content" style="display:none">
+<p><strong>流程：</strong>RSS Trigger → AI Chain ×3（改寫語氣）→ Buffer → Twitter / LinkedIn / IG API</p>
+<p><strong>場景：</strong>部落格新文章發佈後，AI 自動改寫成不同平台風格並排程發文。</p>
+<p><strong>月成本：</strong>~$10（每日 3 篇）</p>
+<p><strong>部署時間：</strong>30 分鐘</p>
+</div>
+</div>
+</div>
+
+<h3>費用節省計算機</h3>
+<div id="costCalculator" style="border:1px solid var(--ink-soft);border-radius:var(--radius);padding:20px;margin:16px 0">
+<div style="margin-bottom:16px">
+<label><strong>每月任務數：</strong><span id="calcTasksVal">5000</span></label><br>
+<input type="range" min="100" max="50000" step="100" value="5000" id="calcTasks" oninput="updateCalc()" style="width:100%;margin-top:4px">
+</div>
+<div style="margin-bottom:16px">
+<label><strong>工作流數量：</strong><span id="calcFlowsVal">5</span></label><br>
+<input type="range" min="1" max="20" value="5" id="calcFlows" oninput="updateCalc()" style="width:100%;margin-top:4px">
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:16px">
+<div style="background:var(--paper-deep);padding:12px;border-radius:var(--radius);text-align:center">
+<div style="font-size:0.8em;color:var(--ink-soft)">Zapier</div>
+<div id="calcZapier" style="font-size:1.4em;font-weight:bold;color:var(--accent)">$73.50</div>
+</div>
+<div style="background:var(--paper-deep);padding:12px;border-radius:var(--radius);text-align:center">
+<div style="font-size:0.8em;color:var(--ink-soft)">n8n Cloud</div>
+<div id="calcCloud" style="font-size:1.4em;font-weight:bold;color:var(--blue)">$24</div>
+</div>
+<div style="background:var(--paper-deep);padding:12px;border-radius:var(--radius);text-align:center">
+<div style="font-size:0.8em;color:var(--ink-soft)">Self-hosted</div>
+<div id="calcSelf" style="font-size:1.4em;font-weight:bold;color:var(--green)">~$5</div>
+</div>
+</div>
+<p id="calcSavings" style="margin-top:12px;font-weight:bold;color:var(--green)">每月節省：$68.50（vs Zapier）</p>
+</div>
+
+<h3>節點類型小測驗</h3>
+<div id="nodeTypeQuiz" class="quiz-box">
+<div data-q="1" style="margin-bottom:20px">
+<p><strong>Q1：</strong>每天早上 9 點自動啟動流程，該用哪種節點？</p>
+<button class="scenario-option" onclick="checkQuiz(1,'trigger',this)">🎯 Trigger</button>
+<button class="scenario-option" onclick="checkQuiz(1,'action',this)">⚡ Action</button>
+<button class="scenario-option" onclick="checkQuiz(1,'logic',this)">🔀 Logic</button>
+<button class="scenario-option" onclick="checkQuiz(1,'ai',this)">🧠 AI</button>
+<div class="quiz-feedback" id="qf1" style="margin-top:8px"></div>
+</div>
+<div data-q="2" style="margin-bottom:20px">
+<p><strong>Q2：</strong>讓 AI 分析客訴情緒（正面/中立/負面），該用？</p>
+<button class="scenario-option" onclick="checkQuiz(2,'trigger',this)">🎯 Trigger</button>
+<button class="scenario-option" onclick="checkQuiz(2,'ai',this)">🧠 AI Agent</button>
+<button class="scenario-option" onclick="checkQuiz(2,'code',this)">💻 Code</button>
+<button class="scenario-option" onclick="checkQuiz(2,'logic',this)">🔀 Logic</button>
+<div class="quiz-feedback" id="qf2" style="margin-top:8px"></div>
+</div>
+<div data-q="3" style="margin-bottom:20px">
+<p><strong>Q3：</strong>根據情緒結果走不同路線（負面→轉人工，正面→自動回覆），用？</p>
+<button class="scenario-option" onclick="checkQuiz(3,'ai',this)">🧠 AI</button>
+<button class="scenario-option" onclick="checkQuiz(3,'action',this)">⚡ Action</button>
+<button class="scenario-option" onclick="checkQuiz(3,'logic',this)">🔀 Logic (IF/Switch)</button>
+<button class="scenario-option" onclick="checkQuiz(3,'code',this)">💻 Code</button>
+<div class="quiz-feedback" id="qf3" style="margin-top:8px"></div>
+</div>
+<div data-q="4" style="margin-bottom:20px">
+<p><strong>Q4：</strong>需要對 JSON 做正則替換和欄位重組，用？</p>
+<button class="scenario-option" onclick="checkQuiz(4,'ai',this)">🧠 AI</button>
+<button class="scenario-option" onclick="checkQuiz(4,'logic',this)">🔀 Logic</button>
+<button class="scenario-option" onclick="checkQuiz(4,'action',this)">⚡ Action</button>
+<button class="scenario-option" onclick="checkQuiz(4,'code',this)">💻 Code</button>
+<div class="quiz-feedback" id="qf4" style="margin-top:8px"></div>
+</div>
+</div>
+
+<h3>Self-host vs Cloud 決策指南</h3>
+<div class="highlight-box">
+<p><strong>選 Cloud 如果你：</strong></p>
+<ul>
+<li>不熟 Docker / Linux 運維</li>
+<li>流程數量少、執行次數在免費額度內</li>
+<li>需要快速驗證想法，不想花時間在基礎設施</li>
+</ul>
+<p><strong>選 Self-host 如果你：</strong></p>
+<ul>
+<li>每月任務數超過 5,000，想省錢</li>
+<li>處理敏感資料，需要資料不離開自己的伺服器</li>
+<li>需要無限制的執行次數與自訂節點</li>
+<li>有基本的 Docker Compose 操作能力</li>
+</ul>
+<p style="margin-top:8px"><strong>建議路線：</strong>Cloud 免費方案練習 → 流程穩定後遷移自架 → 團隊規模用 Docker Compose + Postgres。</p>
+</div>
+
+<script>
+const RAG_STEPS = {
+  indexing: [
+    {label:'📄 Documents', desc:'收集原始文件（PDF、網頁、Notion）'},
+    {label:'✂️ Chunks', desc:'將文件切成 500~1000 字的片段'},
+    {label:'🔢 Embeddings', desc:'用 Embedding Model 將每段文字轉成向量'},
+    {label:'🗄️ Vector DB', desc:'存入向量資料庫（Pinecone / Qdrant / pgvector）'}
+  ],
+  querying: [
+    {label:'❓ Question', desc:'使用者輸入問題'},
+    {label:'🔢 Embedding', desc:'將問題轉成同維度的向量'},
+    {label:'🔍 Search', desc:'在向量資料庫中找最相似的片段（Top-K）'},
+    {label:'📋 Context + LLM', desc:'將找到的片段塞入 prompt，送給 Chat Model'},
+    {label:'💬 Answer', desc:'LLM 根據上下文產生精確回答'}
+  ]
+};
+let ragTimer = null;
+function playRag(phase) {
+  resetRag();
+  const steps = RAG_STEPS[phase];
+  const stage = document.getElementById('ragStage');
+  const desc = document.getElementById('ragDesc');
+  let i = 0;
+  ragTimer = setInterval(() => {
+    if (i >= steps.length) { clearInterval(ragTimer); return; }
+    const indicators = document.querySelectorAll(`.rag-indicator[data-phase="${phase}"]`);
+    if (indicators[i]) indicators[i].style.background = phase === 'indexing' ? 'var(--blue)' : 'var(--green)';
+    const node = document.createElement('span');
+    node.style.cssText = 'background:var(--paper-deep);padding:6px 12px;border-radius:var(--radius);border:1px solid var(--ink-soft);animation:fadeIn .3s';
+    node.textContent = steps[i].label;
+    if (i > 0) { const arrow = document.createElement('span'); arrow.textContent = '→'; stage.appendChild(arrow); }
+    stage.appendChild(node);
+    desc.textContent = steps[i].desc;
+    i++;
+  }, 800);
+}
+function resetRag() {
+  if (ragTimer) clearInterval(ragTimer);
+  document.getElementById('ragStage').innerHTML = '<span style="color:var(--ink-soft)">按下按鈕開始動畫</span>';
+  document.getElementById('ragDesc').textContent = '';
+  document.querySelectorAll('.rag-indicator').forEach(el => el.style.background = 'var(--ink-soft)');
+}
+
+const REACT_STEPS = [
+  {type:'thought', text:'Thought: 使用者問「上季營收多少？」我需要查資料庫'},
+  {type:'action', text:'Action: 呼叫 SQL Tool → SELECT revenue FROM quarterly WHERE q=\'2026Q1\''},
+  {type:'observation', text:'Observation: 回傳結果 → revenue = $2.4M'},
+  {type:'thought', text:'Thought: 已拿到數據，可以回答了'},
+  {type:'answer', text:'Final Answer: 上季營收為 $2.4M，較上期成長 12%。'}
+];
+let reactTimer = null;
+function playReact() {
+  resetReact();
+  const stage = document.getElementById('reactStage');
+  const log = document.getElementById('reactLog');
+  let i = 0;
+  const colors = {thought:'var(--purple)',action:'var(--blue)',observation:'var(--yellow)',answer:'var(--green)'};
+  reactTimer = setInterval(() => {
+    if (i >= REACT_STEPS.length) { clearInterval(reactTimer); return; }
+    const s = REACT_STEPS[i];
+    const node = document.createElement('span');
+    node.style.cssText = `background:${colors[s.type]};color:#fff;padding:4px 10px;border-radius:4px;font-size:0.85em;animation:fadeIn .3s`;
+    node.textContent = s.type.charAt(0).toUpperCase() + s.type.slice(1);
+    stage.appendChild(node);
+    log.textContent += s.text + '\n';
+    i++;
+  }, 1000);
+}
+function resetReact() {
+  if (reactTimer) clearInterval(reactTimer);
+  document.getElementById('reactStage').innerHTML = '';
+  document.getElementById('reactLog').textContent = '';
+}
+
+function toggleGallery(btn) {
+  const content = btn.nextElementSibling;
+  content.style.display = content.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateCalc() {
+  const tasks = parseInt(document.getElementById('calcTasks').value);
+  const flows = parseInt(document.getElementById('calcFlows').value);
+  document.getElementById('calcTasksVal').textContent = tasks.toLocaleString();
+  document.getElementById('calcFlowsVal').textContent = flows;
+  let zapier;
+  if (tasks <= 750) zapier = 29.99;
+  else if (tasks <= 2000) zapier = 49.99;
+  else if (tasks <= 5000) zapier = 73.50;
+  else if (tasks <= 20000) zapier = 148.50;
+  else zapier = 299.00 + Math.ceil((tasks - 50000) / 10000) * 50;
+  if (flows > 5) zapier += (flows - 5) * 10;
+  let cloud;
+  if (tasks <= 2500) cloud = 24;
+  else if (tasks <= 10000) cloud = 60;
+  else cloud = 120;
+  const selfHost = tasks <= 10000 ? 5 : (tasks <= 30000 ? 10 : 20);
+  document.getElementById('calcZapier').textContent = '$' + zapier.toFixed(0);
+  document.getElementById('calcCloud').textContent = '$' + cloud;
+  document.getElementById('calcSelf').textContent = '~$' + selfHost;
+  const savings = zapier - selfHost;
+  document.getElementById('calcSavings').textContent = '每月節省：$' + savings.toFixed(0) + '（vs Zapier）';
+}
+
+const QUIZ_ANSWERS = {1:'trigger', 2:'ai', 3:'logic', 4:'code'};
+const QUIZ_EXPLAIN = {
+  1:'排程觸發是 Trigger 節點（Cron / Schedule）的經典用途。',
+  2:'情緒分析屬於語意理解，交給 AI Agent / LLM Chain 最合適。',
+  3:'根據條件走不同路是 Logic 節點（IF / Switch）的工作。',
+  4:'精確的正則替換和格式轉換，Code 節點最穩定可靠。'
+};
+function checkQuiz(q, answer, btn) {
+  const fb = document.getElementById('qf' + q);
+  const correct = QUIZ_ANSWERS[q] === answer;
+  fb.innerHTML = correct
+    ? '<span style="color:var(--green)">✅ 正確！' + QUIZ_EXPLAIN[q] + '</span>'
+    : '<span style="color:var(--accent)">❌ 再想想—— ' + QUIZ_EXPLAIN[q] + '</span>';
+  btn.style.border = correct ? '2px solid var(--green)' : '2px solid var(--accent)';
+}
+
+updateCalc();
+</script>

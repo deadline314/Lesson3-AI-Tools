@@ -1,0 +1,411 @@
+<div class="panel-header">
+<span class="panel-num">🗺️</span>
+<h2>模型大地圖</h2>
+</div>
+
+<p class="intro">工具是車殼，模型才是引擎。同樣是 Cursor，後面接 GPT-5 跟接 Claude Sonnet 4.6 的行為會差很多。在進入工具之前，先把 2026 年主流的模型梳理一遍——理解<span class="tip" data-tip-key="model-tiers">三個 Tier</span>、<span class="tip" data-tip-key="model-personality">模型個性</span>、以及<span class="tip" data-tip-key="reasoning-model">Reasoning Model</span> 的運作方式。</p>
+
+<!-- ═══ TIER COMPARISON CARDS ═══ -->
+<h3 style="margin-bottom:1rem;">三層模型光譜</h3>
+<div class="tier-cards reveal">
+<div class="tier-card" data-tier="flagship">
+<div class="tier-badge tier-flagship">TIER 1 · 旗艦</div>
+<div class="tier-body">
+<div class="tier-models">
+<span class="tier-model-tag">Claude Opus 4.7</span>
+<span class="tier-model-tag">GPT-5</span>
+<span class="tier-model-tag">Gemini 3 Ultra</span>
+</div>
+<p class="tier-traits">最聰明、最貴、最慢</p>
+<ul class="tier-stats">
+<li><strong>價格</strong>：$10-75 / 1M tokens</li>
+<li><strong>速度</strong>：30-80 tokens/sec</li>
+<li><strong>適合</strong>：架構設計、複雜重構、困難 debug</li>
+</ul>
+</div>
+<div class="tier-expand">
+<h4>什麼時候用旗艦？</h4>
+<p>只在「錯了代價很高」或「需要深度推理」時才動用。用得太頻繁會爆預算。把旗艦想成「諮詢資深顧問」——不是每天都需要，但關鍵時刻少不了。</p>
+<div class="tier-example">
+<strong>場景</strong>：重新設計一個有 200+ API 的 legacy system 架構<br>
+<strong>為什麼用旗艦</strong>：需要同時考慮 backward compatibility、性能、維護成本
+</div>
+</div>
+</div>
+
+<div class="tier-card" data-tier="workhorse">
+<div class="tier-badge tier-workhorse">TIER 2 · 主力</div>
+<div class="tier-body">
+<div class="tier-models">
+<span class="tier-model-tag">Claude Sonnet 4.6</span>
+<span class="tier-model-tag">GPT-5 mini</span>
+<span class="tier-model-tag">Gemini 3 Pro</span>
+</div>
+<p class="tier-traits">平衡的日常戰馬</p>
+<ul class="tier-stats">
+<li><strong>價格</strong>：$2.5-15 / 1M tokens</li>
+<li><strong>速度</strong>：60-120 tokens/sec</li>
+<li><strong>適合</strong>：日常 coding、code review、一般任務</li>
+</ul>
+</div>
+<div class="tier-expand">
+<h4>主力模型是你的預設選擇</h4>
+<p>80% 的工作都交給 Tier 2。它們夠聰明處理大部分任務，速度也不會讓你等到煩。只有遇到 Tier 2 解不好的問題，才升級到 Tier 1。</p>
+<div class="tier-example">
+<strong>場景</strong>：寫一個 CRUD API + 單元測試<br>
+<strong>為什麼用主力</strong>：任務明確、不需要深度推理，主力模型綽綽有餘
+</div>
+</div>
+</div>
+
+<div class="tier-card" data-tier="speed">
+<div class="tier-badge tier-speed">TIER 3 · 高速</div>
+<div class="tier-body">
+<div class="tier-models">
+<span class="tier-model-tag">Claude Haiku 4.5</span>
+<span class="tier-model-tag">GPT-5 nano</span>
+<span class="tier-model-tag">Gemini 3 Flash</span>
+</div>
+<p class="tier-traits">便宜、快、堪用</p>
+<ul class="tier-stats">
+<li><strong>價格</strong>：$0.25-4 / 1M tokens</li>
+<li><strong>速度</strong>：150-300 tokens/sec</li>
+<li><strong>適合</strong>：autocomplete、分類、摘要、高頻呼叫</li>
+</ul>
+</div>
+<div class="tier-expand">
+<h4>高頻低風險任務的首選</h4>
+<p>Tab 補全、文字分類、格式轉換——這些任務每天可能被呼叫幾千次，用旗艦會破產。Tier 3 用來處理「錯了也不會死」的高頻任務。</p>
+<div class="tier-example">
+<strong>場景</strong>：IDE 中的即時 autocomplete<br>
+<strong>為什麼用高速</strong>：需要 <200ms 回應，而且一天觸發上千次
+</div>
+</div>
+</div>
+</div>
+
+<!-- ═══ MODEL PERSONALITY ═══ -->
+<div class="accordion">
+<div class="accordion-trigger">模型「個性」比較</div>
+<div class="accordion-content">
+<p>每個模型家族都有獨特的行為風格，這些差異來自不同團隊的 RLHF 哲學：</p>
+<table class="compare-table">
+<thead><tr><th>特質</th><th>Claude</th><th>GPT</th><th>Gemini</th></tr></thead>
+<tbody>
+<tr><td>回答風格</td><td>謹慎、會澄清</td><td>直接、自信</td><td>結構化、條列</td></tr>
+<tr><td>不確定時</td><td>主動說「我不確定」</td><td>傾向直接給答案</td><td>給多個選項</td></tr>
+<tr><td>Tool Use</td><td>精準、不多做</td><td>偶爾過度使用</td><td>中規中矩</td></tr>
+<tr><td>Coding</td><td>Agent 任務最強</td><td>生態系整合好</td><td>超長檔案分析強</td></tr>
+<tr><td>比喻</td><td>謹慎的資深工程師</td><td>自信的全端選手</td><td>嚴謹的系統架構師</td></tr>
+<tr><td>最適合</td><td>Agentic coding</td><td>通用對話</td><td>大量文件分析</td></tr>
+</tbody>
+</table>
+<p class="highlight-box">選模型像選隊友：寫 Agent 用 Claude 順、做日常對話用 GPT 順、做超長文件用 Gemini 順。</p>
+</div>
+</div>
+
+<!-- ═══ REASONING MODEL DEMO ═══ -->
+<div class="reasoning-demo reveal">
+<h3 style="margin-bottom:0.5rem;">Reasoning Model 對比 Demo</h3>
+<p style="font-size:0.85rem;color:var(--ink-soft);margin-bottom:1.5rem;">同一個問題，看普通模型和 Reasoning 模型如何回答。</p>
+
+<div class="reasoning-question">
+<strong>題目：</strong>一個房間有 4 個角，每個角有一隻貓，每隻貓面前有 3 隻貓。房間裡總共有幾隻貓？
+</div>
+
+<div class="reasoning-split">
+<div class="reasoning-panel normal-panel">
+<div class="reasoning-panel-header">
+<span class="reasoning-badge normal-badge">普通 Model</span>
+<span style="font-size:0.72rem;opacity:0.7">GPT-5 mini · 直覺回答</span>
+</div>
+<div class="reasoning-output" id="normalModelOutput">
+<p class="reasoning-placeholder">按下方按鈕觀看回答過程</p>
+</div>
+</div>
+
+<div class="reasoning-panel reasoning-panel-r">
+<div class="reasoning-panel-header">
+<span class="reasoning-badge reasoning-badge-r">Reasoning Model</span>
+<span style="font-size:0.72rem;opacity:0.7">o3 · 先想再答</span>
+</div>
+<div class="reasoning-thinking" id="reasoningThinking">
+<span class="thinking-label">💭 內心獨白（thinking tokens）</span>
+<div class="thinking-content" id="thinkingContent"></div>
+</div>
+<div class="reasoning-output" id="reasoningModelOutput">
+<p class="reasoning-placeholder">按下方按鈕觀看回答過程</p>
+</div>
+</div>
+</div>
+
+<div style="display:flex;gap:0.75rem;margin-top:1rem;justify-content:center;">
+<button id="reasoningPlay" class="btn btn-primary">▶ 播放對比</button>
+<button id="reasoningReset" class="btn">↺ Reset</button>
+</div>
+<p class="highlight-box" style="margin-top:1rem;">Reasoning Model 多產生了數千個「思考 token」（要算錢！），但答對了。普通模型直覺回答，答錯了。</p>
+</div>
+
+<!-- ═══ MODEL SELECTOR WIDGET ═══ -->
+<div class="model-selector reveal">
+<h3>🎯 模型選擇器</h3>
+<p style="font-size:0.85rem;color:var(--ink-soft);margin-bottom:1.5rem;">回答以下問題，我幫你推薦最適合的模型層級與家族。</p>
+
+<div class="selector-form">
+<div class="selector-field">
+<label>你的任務類型：</label>
+<select id="selectorTask">
+<option value="">— 選擇 —</option>
+<option value="coding-agent">大型 Coding / Agentic 任務</option>
+<option value="coding-simple">簡單 Coding / 補全</option>
+<option value="chat">日常對話 / 問答</option>
+<option value="docs">大量文件分析（>100K tokens）</option>
+<option value="classification">分類 / 摘要 / 格式轉換</option>
+<option value="reasoning">數學 / 邏輯推導</option>
+<option value="creative">創意寫作 / 行銷文案</option>
+</select>
+</div>
+
+<div class="selector-field">
+<label>預算敏感度：</label>
+<select id="selectorBudget">
+<option value="">— 選擇 —</option>
+<option value="unlimited">不在乎（公司買單）</option>
+<option value="moderate">中等（每月 $50 以內）</option>
+<option value="tight">很緊（學生 / Side Project）</option>
+</select>
+</div>
+
+<div class="selector-field">
+<label>隱私需求：</label>
+<select id="selectorPrivacy">
+<option value="">— 選擇 —</option>
+<option value="none">沒有（公開資料）</option>
+<option value="moderate">中等（公司內部資料）</option>
+<option value="strict">嚴格（不能送上雲端）</option>
+</select>
+</div>
+
+<div class="selector-field">
+<label>回應速度需求：</label>
+<select id="selectorSpeed">
+<option value="">— 選擇 —</option>
+<option value="realtime">即時（<1 秒）</option>
+<option value="normal">正常（幾秒可接受）</option>
+<option value="async">不急（批次、離線）</option>
+</select>
+</div>
+
+<button id="selectorSubmit" class="btn btn-primary">🔍 推薦模型</button>
+</div>
+
+<div id="selectorResult" class="selector-result" style="display:none;">
+</div>
+</div>
+
+<!-- ═══ TOKEN COST CALCULATOR ═══ -->
+<div class="cost-calculator reveal">
+<h3>💰 Token 成本計算機</h3>
+<p style="font-size:0.85rem;color:var(--ink-soft);margin-bottom:1.5rem;">估算你的 Side Project 每月 API 費用。</p>
+
+<div class="calc-grid">
+<div class="calc-inputs">
+<div class="calc-field">
+<label>模型選擇：</label>
+<select id="calcModel">
+<option value="opus">Claude Opus 4.7 ($15/$75)</option>
+<option value="sonnet" selected>Claude Sonnet 4.6 ($3/$15)</option>
+<option value="haiku">Claude Haiku 4.5 ($0.80/$4)</option>
+<option value="gpt5">GPT-5 ($10/$30)</option>
+<option value="gpt5mini">GPT-5 mini ($5/$15)</option>
+<option value="gemini-pro">Gemini 3 Pro ($2.50/$10)</option>
+<option value="gemini-flash">Gemini 3 Flash ($0.25/$1)</option>
+</select>
+</div>
+<div class="calc-field">
+<label>每次呼叫 Input tokens：</label>
+<input type="number" id="calcInput" value="2000" min="100" step="100">
+<span class="calc-hint">System prompt + user message</span>
+</div>
+<div class="calc-field">
+<label>每次呼叫 Output tokens：</label>
+<input type="number" id="calcOutput" value="500" min="50" step="50">
+<span class="calc-hint">AI 的回應長度</span>
+</div>
+<div class="calc-field">
+<label>每天呼叫次數：</label>
+<input type="number" id="calcCalls" value="50" min="1" step="10">
+</div>
+<div class="calc-field">
+<label><input type="checkbox" id="calcCache"> 使用 Prompt Caching（省 ~90% input）</label>
+</div>
+<div class="calc-field">
+<label><input type="checkbox" id="calcBatch"> 使用 Batch API（打 5 折，非即時）</label>
+</div>
+<button id="calcBtn" class="btn btn-primary">計算月費</button>
+</div>
+
+<div class="calc-result" id="calcResult">
+<div class="calc-result-header">預估月費</div>
+<div class="calc-result-amount" id="calcAmount">—</div>
+<div class="calc-result-breakdown" id="calcBreakdown"></div>
+</div>
+</div>
+</div>
+
+<!-- ═══ COST STRUCTURE ═══ -->
+<div class="accordion">
+<div class="accordion-trigger">Input vs Output Token：為什麼價格不同？</div>
+<div class="accordion-content">
+<p>幾乎所有 LLM API 都有這個差別：<strong>Output 比 Input 貴 3-5 倍</strong>。</p>
+<table class="compare-table">
+<thead><tr><th>模型</th><th>Input ($/1M tokens)</th><th>Output ($/1M tokens)</th><th>比例</th></tr></thead>
+<tbody>
+<tr><td>Claude Opus 4.7</td><td>$15</td><td>$75</td><td>5x</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>$3</td><td>$15</td><td>5x</td></tr>
+<tr><td>Claude Haiku 4.5</td><td>$0.80</td><td>$4</td><td>5x</td></tr>
+<tr><td>GPT-5</td><td>$10</td><td>$30</td><td>3x</td></tr>
+<tr><td>Gemini 3 Pro</td><td>$2.50</td><td>$10</td><td>4x</td></tr>
+</tbody>
+</table>
+<p><strong>為什麼？</strong>Output 是一個一個 token 生成的，每個 token 都要重新走一次完整的 forward pass + 讀 KV cache。Input 是一次性 prefill，平行化效率高很多。所以 output 算力成本更高。</p>
+
+<h4>Prompt Caching：省 90% 的秘密武器</h4>
+<p>如果你的 system prompt 很長且會被重複呼叫，Prompt Caching 可以讓重複的部分只算 10% 的價錢。</p>
+<div class="highlight-box">100 次呼叫 5000 tokens system prompt：無 cache = $1.50，有 cache = $0.17。省 89%！</div>
+
+<h4>Batch API：非即時任務打 5 折</h4>
+<p>每晚整理 logs、生成週報這類不急的任務，用 Batch API 可以打 5 折，代價是要等最多 24 小時。</p>
+</div>
+</div>
+
+<!-- ═══ SELF-HOST vs API ═══ -->
+<div class="accordion">
+<div class="accordion-trigger">自架 vs API 成本臨界點</div>
+<div class="accordion-content">
+<table class="compare-table">
+<thead><tr><th>場景</th><th>月費（API）</th><th>月費（自架 Llama 4 + GPU）</th><th>結論</th></tr></thead>
+<tbody>
+<tr><td>個人 Side Project，月 100 萬 token</td><td>~$10</td><td>$200+（GPU 租用）</td><td>API 便宜 20 倍</td></tr>
+<tr><td>小公司，月 1 億 token</td><td>~$1000</td><td>$500-800</td><td>自架略便宜</td></tr>
+<tr><td>大量隱私敏感資料</td><td>不能用</td><td>必須自架</td><td>自架唯一選擇</td></tr>
+</tbody>
+</table>
+<p class="highlight-box">Side Project 階段不要想自架，直接用 API。等你的 App 真的有用戶量再考慮。</p>
+
+<h4>開源模型現況（2026）</h4>
+<div class="component-grid">
+<div class="component-card">
+<h5>Llama 4 (Meta)</h5>
+<p>通用最強開源，70B 接近 GPT-5 mini</p>
+</div>
+<div class="component-card">
+<h5>Qwen 3 (Alibaba)</h5>
+<p>中文最強開源，code 能力也不錯</p>
+</div>
+<div class="component-card">
+<h5>DeepSeek V4</h5>
+<p>推理能力接近 o3，MoE 架構省資源</p>
+</div>
+<div class="component-card">
+<h5>Mistral Large 3</h5>
+<p>歐洲團隊，企業合規友好</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ═══ COMPOSER 2 CARD ═══ -->
+<div class="accordion">
+<div class="accordion-trigger">Cursor 的秘密武器：Composer 2 模型</div>
+<div class="accordion-content">
+<p>Cursor 3 自己訓練了一個專用模型叫 <strong>Composer 2</strong>，只在 Cursor IDE 裡可用：</p>
+<ul>
+<li><strong>速度</strong>：比 Sonnet 4.6 快 4 倍</li>
+<li><strong>專精</strong>：針對 IDE 操作（跨檔編輯、重構、補全）優化</li>
+<li><strong>限制</strong>：通用智能弱於旗艦模型，不適合做架構決策</li>
+<li><strong>用法</strong>：在 Cursor 中預設就是 Composer 2，需要更強時手動切到 Claude/GPT</li>
+</ul>
+<p class="highlight-box">Composer 2 = 你的快速小幫手。遇到難題時升級到 Opus/GPT-5 = 請教資深顧問。</p>
+</div>
+</div>
+
+<!-- ═══ DRAG-DROP QUIZ ═══ -->
+<div class="match-game reveal" id="modelMatchGame">
+<h3>拖拉配對：哪個模型最適合？</h3>
+<p class="match-desc">把右邊的模型層級拖到左邊對應的場景</p>
+<div class="match-board">
+<div class="match-scenarios">
+<div class="match-slot" data-answer="tier3">
+<span class="match-scenario">IDE 中每次按鍵都觸發的 autocomplete</span>
+<div class="match-drop" data-slot="m1"></div>
+</div>
+<div class="match-slot" data-answer="tier1">
+<span class="match-scenario">重新設計整個 microservices 架構</span>
+<div class="match-drop" data-slot="m2"></div>
+</div>
+<div class="match-slot" data-answer="tier2">
+<span class="match-scenario">寫一個 REST API + 單元測試</span>
+<div class="match-drop" data-slot="m3"></div>
+</div>
+<div class="match-slot" data-answer="reasoning">
+<span class="match-scenario">解一道複雜的數學邏輯題</span>
+<div class="match-drop" data-slot="m4"></div>
+</div>
+<div class="match-slot" data-answer="opensource">
+<span class="match-scenario">公司有嚴格隱私規定，資料不能上雲</span>
+<div class="match-drop" data-slot="m5"></div>
+</div>
+</div>
+<div class="match-tools" id="modelMatchTools">
+<div class="match-tool" draggable="true" data-tool="tier1">Tier 1 旗艦</div>
+<div class="match-tool" draggable="true" data-tool="tier2">Tier 2 主力</div>
+<div class="match-tool" draggable="true" data-tool="tier3">Tier 3 高速</div>
+<div class="match-tool" draggable="true" data-tool="reasoning">Reasoning Model</div>
+<div class="match-tool" draggable="true" data-tool="opensource">開源自架</div>
+</div>
+</div>
+<div id="modelMatchResult" class="match-result"></div>
+<button id="modelMatchCheck" class="btn btn-primary">✓ 檢查答案</button>
+<button id="modelMatchReset" class="btn">↺ 重來</button>
+</div>
+
+<!-- ═══ WHEN TO USE REASONING ═══ -->
+<div class="accordion">
+<div class="accordion-trigger">Reasoning Model 什麼時候該用？</div>
+<div class="accordion-content">
+<table class="compare-table">
+<thead><tr><th>場景</th><th>用 Reasoning?</th><th>原因</th></tr></thead>
+<tbody>
+<tr><td>數學推導、邏輯謎題</td><td>✅ 強烈建議</td><td>需要多步驗證</td></tr>
+<tr><td>架構設計、技術選型</td><td>✅ 建議</td><td>需要權衡多個因素</td></tr>
+<tr><td>Debug 複雜問題</td><td>✅ 建議</td><td>需要排除多種可能</td></tr>
+<tr><td>一般對話、寒暄</td><td>❌ 不要</td><td>慢、貴、沒必要</td></tr>
+<tr><td>IDE 補全</td><td>❌ 絕對不要</td><td>你打字 0.5 秒，它思考 30 秒</td></tr>
+<tr><td>客服、FAQ</td><td>❌ 不要</td><td>簡單問題不需要思考</td></tr>
+</tbody>
+</table>
+
+<h4>成本對比</h4>
+<div class="component-grid">
+<div class="component-card">
+<h5>普通 Model</h5>
+<p>500 output tokens · 2 秒 · $0.01</p>
+</div>
+<div class="component-card">
+<h5>Reasoning Model</h5>
+<p>500 output + 5000 thinking · 30 秒 · $0.15</p>
+</div>
+</div>
+<p>15 倍價格、15 倍時間，換來困難問題 30-50% 的準確率提升。</p>
+
+<h4>混合策略（推薦）</h4>
+<p>不要把整個 App 都用 reasoning model：</p>
+<ul>
+<li>主要對話流 → 普通 model（Sonnet 4.6 / GPT-5 mini）</li>
+<li>遇到困難子任務 → 呼叫一次 reasoning model（Opus 4.7 / o3）</li>
+<li>結果回到主流程繼續</li>
+</ul>
+<p class="highlight-box">就像你不會請諾貝爾獎得主幫你回 email——只在真正困難時才動用。</p>
+</div>
+</div>

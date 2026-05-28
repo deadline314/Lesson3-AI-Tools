@@ -1,0 +1,491 @@
+<div class="panel-header">
+<span class="panel-num">★</span>
+<h2>名詞解碼</h2>
+</div>
+
+<p class="intro">這四個核心概念在 2026 年的 AI 開發圈無處不在。深入理解它們的運作原理，你就能看懂任何工具的文件、跟同事有效討論、並做出正確的技術選擇。</p>
+
+<!-- MCP Section -->
+<div class="accordion">
+<div class="accordion-trigger">MCP — Model Context Protocol 完整解析</div>
+<div class="accordion-content">
+<h4>N×M 問題</h4>
+<p>沒有 MCP 之前：5 個 AI 工具 × 8 個外部服務 = 40 種客製整合。有了 MCP：5 + 8 = 13 個標準接口。</p>
+
+<div class="highlight-box" id="mcpProblemViz">
+<h5>N×M 問題視覺化 — 點擊切換</h5>
+<div style="display:flex;gap:1rem;margin-bottom:1rem;">
+<button class="btn" id="mcpWithoutBtn" onclick="document.getElementById('mcpWithout').style.display='block';document.getElementById('mcpWith').style.display='none';">Without MCP (混亂)</button>
+<button class="btn btn-primary" id="mcpWithBtn" onclick="document.getElementById('mcpWith').style.display='block';document.getElementById('mcpWithout').style.display='none';">With MCP (乾淨)</button>
+</div>
+<div id="mcpWithout" style="display:block;">
+<svg viewBox="0 0 500 200" style="width:100%;max-width:500px;font-family:monospace;font-size:11px;">
+<text x="50" y="30" fill="#1a1a1a">AI 工具</text><text x="380" y="30" fill="#1a1a1a">外部服務</text>
+<rect x="20" y="40" width="80" height="22" rx="3" fill="#ff5722" opacity="0.8"/><text x="35" y="55" fill="white" font-size="9">Cursor</text>
+<rect x="20" y="70" width="80" height="22" rx="3" fill="#ff5722" opacity="0.8"/><text x="25" y="85" fill="white" font-size="9">Claude Code</text>
+<rect x="20" y="100" width="80" height="22" rx="3" fill="#ff5722" opacity="0.8"/><text x="35" y="115" fill="white" font-size="9">ChatGPT</text>
+<rect x="20" y="130" width="80" height="22" rx="3" fill="#ff5722" opacity="0.8"/><text x="35" y="145" fill="white" font-size="9">Gemini</text>
+<rect x="370" y="40" width="80" height="22" rx="3" fill="#2962ff" opacity="0.8"/><text x="385" y="55" fill="white" font-size="9">GitHub</text>
+<rect x="370" y="70" width="80" height="22" rx="3" fill="#2962ff" opacity="0.8"/><text x="390" y="85" fill="white" font-size="9">Slack</text>
+<rect x="370" y="100" width="80" height="22" rx="3" fill="#2962ff" opacity="0.8"/><text x="385" y="115" fill="white" font-size="9">Drive</text>
+<rect x="370" y="130" width="80" height="22" rx="3" fill="#2962ff" opacity="0.8"/><text x="385" y="145" fill="white" font-size="9">Notion</text>
+<line x1="100" y1="51" x2="370" y2="51" stroke="#1a1a1a" opacity="0.3"/><line x1="100" y1="51" x2="370" y2="81" stroke="#1a1a1a" opacity="0.3"/>
+<line x1="100" y1="51" x2="370" y2="111" stroke="#1a1a1a" opacity="0.3"/><line x1="100" y1="51" x2="370" y2="141" stroke="#1a1a1a" opacity="0.3"/>
+<line x1="100" y1="81" x2="370" y2="51" stroke="#1a1a1a" opacity="0.3"/><line x1="100" y1="81" x2="370" y2="81" stroke="#1a1a1a" opacity="0.3"/>
+<line x1="100" y1="81" x2="370" y2="111" stroke="#1a1a1a" opacity="0.3"/><line x1="100" y1="81" x2="370" y2="141" stroke="#1a1a1a" opacity="0.3"/>
+<line x1="100" y1="111" x2="370" y2="51" stroke="#1a1a1a" opacity="0.3"/><line x1="100" y1="111" x2="370" y2="81" stroke="#1a1a1a" opacity="0.3"/>
+<line x1="100" y1="111" x2="370" y2="111" stroke="#1a1a1a" opacity="0.3"/><line x1="100" y1="111" x2="370" y2="141" stroke="#1a1a1a" opacity="0.3"/>
+<line x1="100" y1="141" x2="370" y2="51" stroke="#1a1a1a" opacity="0.3"/><line x1="100" y1="141" x2="370" y2="81" stroke="#1a1a1a" opacity="0.3"/>
+<line x1="100" y1="141" x2="370" y2="111" stroke="#1a1a1a" opacity="0.3"/><line x1="100" y1="141" x2="370" y2="141" stroke="#1a1a1a" opacity="0.3"/>
+<text x="180" y="185" fill="#ff5722" font-size="12" font-weight="bold">4 × 4 = 16 條整合</text>
+</svg>
+</div>
+<div id="mcpWith" style="display:none;">
+<svg viewBox="0 0 500 200" style="width:100%;max-width:500px;font-family:monospace;font-size:11px;">
+<text x="50" y="30" fill="#1a1a1a">AI 工具</text><text x="380" y="30" fill="#1a1a1a">外部服務</text>
+<rect x="20" y="40" width="80" height="22" rx="3" fill="#ff5722" opacity="0.8"/><text x="35" y="55" fill="white" font-size="9">Cursor</text>
+<rect x="20" y="70" width="80" height="22" rx="3" fill="#ff5722" opacity="0.8"/><text x="25" y="85" fill="white" font-size="9">Claude Code</text>
+<rect x="20" y="100" width="80" height="22" rx="3" fill="#ff5722" opacity="0.8"/><text x="35" y="115" fill="white" font-size="9">ChatGPT</text>
+<rect x="20" y="130" width="80" height="22" rx="3" fill="#ff5722" opacity="0.8"/><text x="35" y="145" fill="white" font-size="9">Gemini</text>
+<rect x="220" y="60" width="60" height="80" rx="5" fill="#00c853" opacity="0.9"/><text x="230" y="105" fill="white" font-size="11" font-weight="bold">MCP</text>
+<rect x="370" y="40" width="80" height="22" rx="3" fill="#2962ff" opacity="0.8"/><text x="385" y="55" fill="white" font-size="9">GitHub</text>
+<rect x="370" y="70" width="80" height="22" rx="3" fill="#2962ff" opacity="0.8"/><text x="390" y="85" fill="white" font-size="9">Slack</text>
+<rect x="370" y="100" width="80" height="22" rx="3" fill="#2962ff" opacity="0.8"/><text x="385" y="115" fill="white" font-size="9">Drive</text>
+<rect x="370" y="130" width="80" height="22" rx="3" fill="#2962ff" opacity="0.8"/><text x="385" y="145" fill="white" font-size="9">Notion</text>
+<line x1="100" y1="51" x2="220" y2="90" stroke="#00c853" stroke-width="2"/><line x1="100" y1="81" x2="220" y2="95" stroke="#00c853" stroke-width="2"/>
+<line x1="100" y1="111" x2="220" y2="105" stroke="#00c853" stroke-width="2"/><line x1="100" y1="141" x2="220" y2="115" stroke="#00c853" stroke-width="2"/>
+<line x1="280" y1="90" x2="370" y2="51" stroke="#00c853" stroke-width="2"/><line x1="280" y1="95" x2="370" y2="81" stroke="#00c853" stroke-width="2"/>
+<line x1="280" y1="105" x2="370" y2="111" stroke="#00c853" stroke-width="2"/><line x1="280" y1="115" x2="370" y2="141" stroke="#00c853" stroke-width="2"/>
+<text x="180" y="185" fill="#00c853" font-size="12" font-weight="bold">4 + 4 = 8 條標準接口</text>
+</svg>
+</div>
+</div>
+
+<h4>三層架構</h4>
+<div class="component-grid">
+<div class="component-card">
+<h5><span class="tip" data-tip-key="mcp-host">Host</span></h5>
+<p>你互動的 AI 應用（Cursor、Claude Desktop）</p>
+</div>
+<div class="component-card">
+<h5><span class="tip" data-tip-key="mcp-client">Client</span></h5>
+<p>Host 內部的連線模組（1:1 對應 Server）</p>
+</div>
+<div class="component-card">
+<h5><span class="tip" data-tip-key="mcp-server">Server</span></h5>
+<p>提供能力的外掛（GitHub MCP、Slack MCP）</p>
+</div>
+</div>
+
+<h4>三種原語 (Primitives)</h4>
+<table class="compare-table">
+<thead><tr><th>原語</th><th>方向</th><th>比喻</th><th>範例</th></tr></thead>
+<tbody>
+<tr><td><span class="tip" data-tip-key="mcp-tools">Tools</span></td><td>AI → Server</td><td>遙控器按鈕</td><td>send_message(), create_issue()</td></tr>
+<tr><td><span class="tip" data-tip-key="mcp-resources">Resources</span></td><td>Server → AI</td><td>書架上的書</td><td>file://readme.md, db://users</td></tr>
+<tr><td><span class="tip" data-tip-key="mcp-prompts">Prompts</span></td><td>Server → User</td><td>菜單範本</td><td>/review-code, /summarize-channel</td></tr>
+</tbody>
+</table>
+
+<h4>傳輸方式比較</h4>
+<table class="compare-table">
+<thead><tr><th>面向</th><th><span class="tip" data-tip-key="mcp-stdio">stdio</span></th><th><span class="tip" data-tip-key="mcp-http">HTTP/SSE</span></th></tr></thead>
+<tbody>
+<tr><td>適合</td><td>本機工具</td><td>遠端服務</td></tr>
+<tr><td>啟動方式</td><td>spawn process</td><td>HTTP endpoint</td></tr>
+<tr><td>安全性</td><td>本機隔離</td><td>需 HTTPS + Auth</td></tr>
+<tr><td>多人共用</td><td>不行</td><td>可以</td></tr>
+<tr><td>範例</td><td>Claude Code 本地 MCP</td><td>雲端 Slack MCP Server</td></tr>
+</tbody>
+</table>
+
+<h4>進階能力</h4>
+<div class="component-grid">
+<div class="component-card"><h5>Sampling</h5><p>Server 反過來請求 Host 的 LLM 做推理</p></div>
+<div class="component-card"><h5>Elicitation</h5><p>Server 向使用者詢問額外資訊</p></div>
+<div class="component-card"><h5>Roots</h5><p>限制 Server 可存取的檔案範圍</p></div>
+<div class="component-card"><h5>MCP Apps</h5><p>不需安裝，點一下就連上的 MCP 應用</p></div>
+</div>
+</div>
+</div>
+
+<!-- MCP Connection Simulator -->
+<div class="highlight-box reveal" id="mcpSimulator">
+<h4>MCP 連線模擬器</h4>
+<p>按下播放，看 Host → Client → Server → External API 的完整流程</p>
+<div class="n8n-flow" id="mcpFlow" style="justify-content
+
+<!-- Skills Section -->
+<div class="accordion">
+<div class="accordion-trigger">Skills — Agent 的專業教科書</div>
+<div class="accordion-content">
+<h4>資料夾結構</h4>
+<div class="code-block">
+<pre><code>my-skill/
+├── SKILL.md              ← 入口：觸發條件 + 使用方式
+├── scripts/
+│   ├── extract.py        ← 輔助腳本
+│   └── validate.sh
+├── references/
+│   ├── api-schema.json   ← 深層參考資料
+│   └── style-guide.md
+└── examples/
+    └── output-sample.md  ← 範例輸出</code></pre>
+</div>
+
+<h4>Progressive Disclosure 三層機制</h4>
+<div class="component-grid">
+<div class="component-card">
+<h5><span class="tip" data-tip-key="skill-l1">L1 · Metadata</span></h5>
+<p>~50 tokens：skill 名字 + 觸發條件。永遠載入。</p>
+</div>
+<div class="component-card">
+<h5><span class="tip" data-tip-key="skill-l2">L2 · SKILL.md</span></h5>
+<p>~2K tokens：完整指南。觸發時才讀。</p>
+</div>
+<div class="component-card">
+<h5><span class="tip" data-tip-key="skill-l3">L3 · Deep Files</span></h5>
+<p>不定量：scripts + references。需要時才開。</p>
+</div>
+</div>
+
+<h4>Skills vs Tools 比較</h4>
+<table class="compare-table">
+<thead><tr><th>面向</th><th>Skills</th><th>Tools (MCP)</th></tr></thead>
+<tbody>
+<tr><td>本質</td><td>知識文件（Markdown）</td><td>可執行函式（Code）</td></tr>
+<tr><td>觸發</td><td>AI 自行判斷載入</td><td>AI 呼叫執行</td></tr>
+<tr><td>修改</td><td>改文字檔，零成本</td><td>改程式碼，要測試</td></tr>
+<tr><td>跨平台</td><td>Claude Code / Cursor / Codex 共用</td><td>需各平台適配</td></tr>
+<tr><td>比喻</td><td>教科書</td><td>瑞士刀</td></tr>
+</tbody>
+</table>
+
+<h4>SKILL.md 範本</h4>
+<div class="code-block">
+<pre><code># Weekly Report Generator
+
+Use this skill when the user asks to write a weekly report,
+generate a status update, or summarize this week's work.
+
+## Steps
+1. Read git log for the past 7 days
+2. Categorize commits by type (feat/fix/refactor)
+3. Extract key metrics from CI dashboard
+4. Generate report in company template format
+
+## Format
+- Markdown with headers
+- Max 300 words
+- Include: Done / Blocked / Next Week
+
+## References
+- See references/template.md for exact format
+- See scripts/git-stats.sh for commit extraction</code></pre>
+</div>
+</div>
+</div>
+
+<!-- Agent Concept -->
+<div class="accordion">
+<div class="accordion-trigger">Agent — 概念深入理解</div>
+<div class="accordion-content">
+<h4>ReAct 虛擬碼</h4>
+<div class="code-block">
+<pre><code>function agent_loop(goal, tools, memory):
+    history = []
+    while true:
+        thought = llm.reason(goal, history, memory)
+        if thought.is_complete:
+            return thought.final_answer
+
+        action = llm.select_tool(thought, tools)
+        result = execute(action)
+        observation = parse(result)
+
+        history.append({thought, action, observation})
+        memory.update(observation)</code></pre>
+</div>
+
+<h4>三大組件</h4>
+<table class="compare-table">
+<thead><tr><th>組件</th><th>角色</th><th>比喻</th><th>範例技術</th></tr></thead>
+<tbody>
+<tr><td><span class="tip" data-tip-key="agent-brain">Brain</span></td><td>推理 + 決策</td><td>大腦</td><td>GPT-4o, Claude Opus, Gemini</td></tr>
+<tr><td><span class="tip" data-tip-key="agent-mem-comp">Memory</span></td><td>記住上下文</td><td>筆記本</td><td>Vector DB, Window Buffer</td></tr>
+<tr><td><span class="tip" data-tip-key="agent-tools-comp">Tools</span></td><td>與世界互動</td><td>雙手</td><td>Web Search, File I/O, APIs</td></tr>
+</tbody>
+</table>
+
+<h4>Agent vs ChatBot 關鍵差異</h4>
+<table class="compare-table">
+<thead><tr><th>面向</th><th>ChatBot</th><th>Agent</th></tr></thead>
+<tbody>
+<tr><td>控制流</td><td>人類驅動每一步</td><td>AI 自主規劃</td></tr>
+<tr><td>工具</td><td>無</td><td>可呼叫多種</td></tr>
+<tr><td>錯誤處理</td><td>「我不確定」</td><td>換策略重試</td></tr>
+<tr><td>步數</td><td>固定 1 步</td><td>動態 N 步</td></tr>
+<tr><td>適合</td><td>問答、翻譯</td><td>複雜多步任務</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Hermes Agent -->
+<div class="accordion">
+<div class="accordion-trigger">Hermes Agent — 會自我進化的 Agent</div>
+<div class="accordion-content">
+<h4>Self-improving Loop</h4>
+<ol class="step-list">
+<li><strong>接收任務</strong> — 使用者給目標</li>
+<li><strong>執行</strong> — 用工具完成任務</li>
+<li><strong>反省</strong> — 評估自己的表現：哪裡做得好？哪裡可以更快？</li>
+<li><strong>學習</strong> — 把新知識寫成 Skill，下次直接用</li>
+<li><strong>記憶</strong> — 更新長期記憶，記住使用者偏好</li>
+</ol>
+
+<h4>Stateful vs Stateless</h4>
+<table class="compare-table">
+<thead><tr><th>面向</th><th>Stateless（一般 LLM）</th><th>Stateful（Hermes）</th></tr></thead>
+<tbody>
+<tr><td>記憶範圍</td><td>僅本次對話視窗</td><td>跨天、跨月累積</td></tr>
+<tr><td>學習能力</td><td>不會（每次清零）</td><td>自動產生新 Skills</td></tr>
+<tr><td>個人化</td><td>需手動貼 context</td><td>自動記住偏好</td></tr>
+<tr><td>多平台</td><td>各平台獨立</td><td>同一人格跨 Discord/Slack/Web</td></tr>
+<tr><td>適合場景</td><td>一次性問答</td><td>長期專案助理</td></tr>
+</tbody>
+</table>
+
+<h4>典型架構</h4>
+<div class="code-block">
+<pre><code>┌─────────────┐     ┌─────────────┐     ┌────────────┐
+│  Gateway    │────▶│  Agent Core │────▶│  Tools     │
+│ (多平台入口) │     │ (LLM + Loop)│     │ (MCP/APIs) │
+└─────────────┘     └──────┬──────┘     └────────────┘
+                           │
+                    ┌──────▼──────┐
+                    │  Memory DB  │
+                    │ (向量+關係) │
+                    └─────────────┘</code></pre>
+</div>
+</div>
+</div>
+
+<!-- Progressive Disclosure Demo -->
+<div class="highlight-box reveal" id="progressiveDemo">
+<h4>Progressive Disclosure 互動展示</h4>
+<p>點擊按鈕逐層載入 Skill，觀察 token 成本如何變化</p>
+<div style="display:flex;gap:0.5rem;margin:1rem 0;">
+<button class="btn" id="pdL1Btn" onclick="showPDLevel(1)">L1 · Metadata</button>
+<button class="btn" id="pdL2Btn" onclick="showPDLevel(2)">L2 · SKILL.md</button>
+<button class="btn" id="pdL3Btn" onclick="showPDLevel(3)">L3 · Deep Files</button>
+</div>
+<div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.75rem;">
+<span style="font-family:JetBrains Mono,monospace;font-size:0.8rem;font-weight:700;">Token 成本：</span>
+<span id="pdTokenCount" style="font-family:JetBrains Mono,monospace;font-size:1.2rem;color:var(--accent);font-weight:700;">0</span>
+</div>
+<div class="code-block" style="margin:0;">
+<pre><code id="pdContent" style="font-size:0.8rem;white-space:pre-wrap;">點擊上方按鈕開始...</code></pre>
+</div>
+</div>
+
+<!-- Skill Template Generator -->
+<div class="highlight-box reveal" id="skillGenerator">
+<h4>Skill 模板產生器</h4>
+<p>輸入你的使用情境，產生一個 SKILL.md 骨架</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+<div>
+<label style="font-weight:700;font-size:0.85rem;">Skill 名稱</label>
+<input id="skillGenName" type="text" placeholder="例：Weekly Report" style="width:100%;padding:0.5rem;border:2px solid var(--ink);margin-top:0.3rem;">
+<label style="font-weight:700;font-size:0.85rem;margin-top:0.75rem;display:block;">觸發條件</label>
+<input id="skillGenTrigger" type="text" placeholder="例：當使用者要求寫週報時" style="width:100%;padding:0.5rem;border:2px solid var(--ink);margin-top:0.3rem;">
+<label style="font-weight:700;font-size:0.85rem;margin-top:0.75rem;display:block;">主要步驟（逗號分隔）</label>
+<textarea id="skillGenSteps" rows="3" placeholder="例：讀 git log, 分類 commits, 產出報告" style="width:100%;padding:0.5rem;border:2px solid var(--ink);margin-top:0.3rem;"></textarea>
+<label style="font-weight:700;font-size:0.85rem;margin-top:0.75rem;display:block;">輸出格式</label>
+<input id="skillGenFormat" type="text" placeholder="例：Markdown, 300 字以內" style="width:100%;padding:0.5rem;border:2px solid var(--ink);margin-top:0.3rem;">
+<button class="btn btn-primary" style="margin-top:1rem;" onclick="generateSkillTemplate()">產生模板</button>
+</div>
+<div class="code-block" style="margin:0;">
+<pre><code id="skillGenOutput" style="font-size:0.8rem;white-space:pre-wrap;">← 填完後點擊「產生模板」</code></pre>
+</div>
+</div>
+</div>
+
+<!-- Enhanced Flashcards -->
+<div class="flashcard-section reveal">
+<h3>名詞字卡 — 進階版</h3>
+<p>測試你對核心概念的理解。點擊翻面看答案。</p>
+<div class="flashcard-deck" id="flashcardDeckT5">
+<div class="flashcard t5-flash" data-flipped="false">
+<div class="flashcard-front">MCP 的三層架構是？</div>
+<div class="flashcard-back">Host（AI 應用）→ Client（連線模組）→ Server（工具提供方）</div>
+</div>
+<div class="flashcard t5-flash" data-flipped="false">
+<div class="flashcard-front">stdio 和 HTTP/SSE 傳輸各適合什麼場景？</div>
+<div class="flashcard-back">stdio：本機工具，簡單快速。HTTP/SSE：遠端服務，可多人共用、需認證。</div>
+</div>
+<div class="flashcard t5-flash" data-flipped="false">
+<div class="flashcard-front">Skills 的 Progressive Disclosure 是什麼概念？</div>
+<div class="flashcard-back">三層漸進載入：L1 永遠載入（~50 tokens）、L2 觸發時讀（~2K）、L3 需要時才開。像 lazy loading。</div>
+</div>
+<div class="flashcard t5-flash" data-flipped="false">
+<div class="flashcard-front">JSON-RPC 2.0 在 MCP 中的角色？</div>
+<div class="flashcard-back">MCP 的底層通訊格式。標準化的 JSON 請求/回應結構，任何語言都能實作。</div>
+</div>
+<div class="flashcard t5-flash" data-flipped="false">
+<div class="flashcard-front">Prompt Caching 是什麼？有什麼好處？</div>
+<div class="flashcard-back">把重複使用的 prompt 前綴快取起來，下次呼叫時不用重新處理。省 token 費用、降低延遲。</div>
+</div>
+<div class="flashcard t5-flash" data-flipped="false">
+<div class="flashcard-front">RAG 是什麼的縮寫？解決什麼問題？</div>
+<div class="flashcard-back">Retrieval-Augmented Generation。先從知識庫檢索相關資料，再讓 LLM 基於這些資料生成回答。解決 LLM 知識過時和幻覺問題。</div>
+</div>
+<div class="flashcard t5-flash" data-flipped="false">
+<div class="flashcard-front">模型 Quantization（量化）是什麼？</div>
+<div class="flashcard-back">把模型參數從高精度（FP16）降到低精度（INT8/INT4），大幅縮小模型檔案、降低記憶體需求，代價是微小的品質損失。</div>
+</div>
+<div class="flashcard t5-flash" data-flipped="false">
+<div class="flashcard-front">MCP 的 Sampling 能力是什麼？</div>
+<div class="flashcard-back">Server 反過來請求 Host 的 LLM 做推理。讓 Server 也能利用 AI 能力，而不只是被動提供工具。</div>
+</div>
+<div class="flashcard t5-flash" data-flipped="false">
+<div class="flashcard-front">Hermes 的 Self-improving Loop 有哪些步驟？</div>
+<div class="flashcard-back">接收任務 → 執行 → 反省表現 → 學習（寫成 Skill）→ 更新記憶。越用越強。</div>
+</div>
+<div class="flashcard t5-flash" data-flipped="false">
+<div class="flashcard-front">Agent 的 ReAct 模式全稱？核心概念？</div>
+<div class="flashcard-back">Reasoning + Acting。先推理（Thought）→ 行動（Action）→ 觀察結果（Observation）→ 循環直到目標達成。</div>
+</div>
+<div class="flashcard t5-flash" data-flipped="false">
+<div class="flashcard-front">為什麼 Skills 比 fine-tuning 更實用？</div>
+<div class="flashcard-back">Skills 是純文字檔，改 Markdown 就好，零成本、即時生效。Fine-tuning 要準備資料集、花錢訓練、不好修改。</div>
+</div>
+<div class="flashcard t5-flash" data-flipped="false">
+<div class="flashcard-front">MCP 的 Elicitation 能力是什麼？</div>
+<div class="flashcard-back">Server 在執行過程中向使用者詢問額外資訊（如確認刪除、選擇選項），實現人機互動而非盲目執行。</div>
+</div>
+</div>
+<div class="flashcard-progress">
+<span id="flashcardCountT5">0 / 12 已翻</span>
+<button class="btn" id="flashResetT5" onclick="document.querySelectorAll('.t5-flash').forEach(c=>c.classList.remove('flipped'));document.getElementById('flashcardCountT5').textContent='0 / 12 已翻'">↺ 重置</button>
+</div>
+</div>
+
+<div class="accordion">
+<div class="accordion-trigger">實戰：連接 Google Drive MCP</div>
+<div class="accordion-content">
+<ol class="step-list">
+<li><strong>找到 MCP Server</strong> — 在 mcp.so 或 GitHub 搜尋 "google-drive-mcp"</li>
+<li><strong>安裝</strong> — <code>npm install -g @anthropic/mcp-google-drive</code></li>
+<li><strong>設定 OAuth</strong> — 到 Google Cloud Console 建立 OAuth credentials</li>
+<li><strong>加到 Host 設定</strong> — 在 claude_desktop_config.json 加入 server 設定</li>
+<li><strong>認證</strong> — 首次啟動會跳出 Google 登入視窗</li>
+<li><strong>使用</strong> — 對 Claude 說「讀我 Drive 裡的 spec 文件」</li>
+</ol>
+<div class="code-block">
+<pre><code>// claude_desktop_config.json
+{
+  "mcpServers": {
+    "google-drive": {
+      "command": "mcp-google-drive",
+      "args": ["--credentials", "~/.config/gcp/oauth.json"]
+    }
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+(function(){
+  window.updateJsonRpc = function() {
+    var method = document.getElementById('jrpcMethod') ? document.getElementById('jrpcMethod').value : 'tools/call';
+    var tool = document.getElementById('jrpcTool') ? document.getElementById('jrpcTool').value : 'example';
+    var argsRaw = document.getElementById('jrpcArgs') ? document.getElementById('jrpcArgs').value : '{}';
+    var args;
+    try { args = JSON.parse(argsRaw); } catch(e) { args = {"error": "Invalid JSON"}; }
+    var msg = { jsonrpc: "2.0", method: method, params: method === 'tools/call' ? { name: tool, arguments: args } : args, id: Math.floor(Math.random() * 1000) };
+    var el = document.getElementById('jrpcOutput');
+    if (el) el.textContent = JSON.stringify(msg, null, 2);
+  };
+  setTimeout(function(){ if(window.updateJsonRpc) window.updateJsonRpc(); }, 100);
+
+  var pdLevels = {
+    1: { tokens: 48, content: "# weekly-report-generator
+Trigger: write weekly report, status update
+Type: automation" },
+    2: { tokens: 1847, content: "# Weekly Report Generator
+
+Use this skill when the user asks to write a weekly report.
+
+## Steps
+1. Run scripts/git-stats.sh
+2. Categorize by type: feat / fix / refactor
+3. Read references/template.md
+4. Generate 300-word summary
+
+## Constraints
+- Max 300 words
+- Include: Done / Blocked / Next Week" },
+    3: { tokens: 5230, content: "# Weekly Report Generator
+[L2 content]
+
+## scripts/git-stats.sh
+#!/bin/bash
+git log --since=7days --pretty=format:%h %s
+
+## references/template.md
+# Week of {{date}}
+## Completed
+## Blocked
+## Next Week" }
+  };
+  window.showPDLevel = function(level) {
+    var d = pdLevels[level];
+    document.getElementById('pdContent').textContent = d.content.replace(/\n/g, '
+');
+    document.getElementById('pdTokenCount').textContent = d.tokens + ' tokens';
+    var btns = document.querySelectorAll('#progressiveDemo .btn');
+    for(var i=0;i<btns.length;i++){
+      btns[i].style.background = (i < level) ? 'var(--ink)' : '';
+      btns[i].style.color = (i < level) ? 'var(--paper)' : '';
+    }
+  };
+
+  window.generateSkillTemplate = function() {
+    var name = document.getElementById('skillGenName') ? document.getElementById('skillGenName').value : 'My Skill';
+    var trigger = document.getElementById('skillGenTrigger') ? document.getElementById('skillGenTrigger').value : 'when user asks...';
+    var stepsRaw = document.getElementById('skillGenSteps') ? document.getElementById('skillGenSteps').value : '';
+    var format = document.getElementById('skillGenFormat') ? document.getElementById('skillGenFormat').value : 'Markdown';
+    var steps = stepsRaw.split(',').map(function(s,i){ return (i+1) + '. ' + s.trim(); }).join('
+');
+    var template = '# ' + name + '
+
+Use this skill ' + trigger + '.
+
+## Steps
+' + steps + '
+
+## Output Format
+- ' + format + '
+
+## References
+- See references/ for specs
+- See scripts/ for helpers';
+    document.getElementById('skillGenOutput').textContent = template;
+  };
+
+  var t5Flipped = 0;
+  document.querySelectorAll('.t5-flash').forEach(function(card){
+    card.addEventListener('click', function(){
+      if (!card.classList.contains('flipped')) { card.classList.add('flipped'); t5Flipped++; }
+      else { card.classList.remove('flipped'); t5Flipped--; }
+      var c = document.getElementById('flashcardCountT5');
+      if (c) c.textContent = t5Flipped + ' / 12 已翻';
+    });
+  });
+})();
+</script>
