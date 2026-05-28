@@ -27,8 +27,8 @@
     --type-subtitle: 44px;
     --type-body: 32px;
     --type-small: 26px;
-    --type-tag: 22px;
-    --type-kbd: 20px;
+    --type-tag: 24px;
+    --type-kbd: 24px;
 
     --pad-top: 100px;
     --pad-bottom: 90px;
@@ -66,7 +66,7 @@
     position: absolute;
     bottom: 36px; right: 48px;
     font-family: var(--font-mono);
-    font-size: 18px;
+    font-size: 24px;
     color: var(--muted);
     letter-spacing: 0.08em;
   }
@@ -76,7 +76,7 @@
     position: absolute;
     top: 36px; left: 48px;
     font-family: var(--font-mono);
-    font-size: 18px;
+    font-size: 24px;
     color: var(--muted);
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -174,34 +174,29 @@
     font-family: var(--font-display);
     font-weight: 700;
     font-size: var(--type-hero);
-    line-height: 0.92;
+    line-height: 1.05;
     letter-spacing: -0.04em;
     position: relative; z-index: 2;
   }
-  .cover-hero .line { display: block; overflow: hidden; }
-  .cover-hero .line span { display: inline-block; }
-  .is-active .cover-hero .line span {
-    animation: rise 0.9s cubic-bezier(.2,.7,.2,1) both;
+  .cover-hero .line { display: block; }
+  .is-active .cover-hero .line {
+    animation: fadeUp 0.9s cubic-bezier(.2,.7,.2,1) both;
   }
-  .is-active .cover-hero .line:nth-child(1) span { animation-delay: 0.1s; }
-  .is-active .cover-hero .line:nth-child(2) span { animation-delay: 0.25s; }
-  @keyframes rise {
-    from { transform: translateY(110%); }
-    to { transform: translateY(0); }
-  }
+  .is-active .cover-hero .line:nth-child(1) { animation-delay: 0.1s; }
+  .is-active .cover-hero .line:nth-child(2) { animation-delay: 0.3s; }
   .cover-meta {
-    margin-top: 60px;
+    position: absolute; left: 110px; bottom: 110px;
     display: flex; gap: 40px;
     font-family: var(--font-mono);
     font-size: var(--type-small);
     color: #9CA0C5;
-    z-index: 2; position: relative;
+    z-index: 3;
   }
   .cover-meta span { display: inline-flex; align-items: center; gap: 12px; }
   .cover-meta .dot { width: 8px; height: 8px; background: var(--lime); border-radius: 50%; }
   .cover-corner {
     position: absolute; top: 56px; right: 56px;
-    font-family: var(--font-mono); font-size: 22px;
+    font-family: var(--font-mono); font-size: 24px;
     color: #9CA0C5; letter-spacing: 0.1em;
     z-index: 2;
   }
@@ -219,9 +214,9 @@
     padding: 18px 0; border-bottom: 1px solid rgba(14,21,48,0.12);
     font-size: 38px;
   }
-  .agenda-item .num { font-family: var(--font-mono); font-size: 24px; color: var(--coral); letter-spacing: 0.05em; }
+  .agenda-item .num { font-family: var(--font-mono); font-size: 26px; color: var(--coral); letter-spacing: 0.05em; }
   .agenda-item .label { font-weight: 500; letter-spacing: -0.01em; }
-  .agenda-item .min { font-family: var(--font-mono); font-size: 22px; color: var(--muted); }
+  .agenda-item .min { font-family: var(--font-mono); font-size: 24px; color: var(--muted); }
 
   /* S3 — chat to action */
   .split { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; height: 100%; align-items: center; }
@@ -235,7 +230,7 @@
     position: relative; overflow: hidden;
   }
   .pane.right { background: var(--ink); color: var(--bg); }
-  .pane .label { font-family: var(--font-mono); font-size: 22px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .pane .label { font-family: var(--font-mono); font-size: 24px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
   .pane.right .label { color: var(--lime); }
   .pane .big { font-family: var(--font-display); font-weight: 700; font-size: 76px; letter-spacing: -0.03em; line-height: 1; }
   .pane .desc { font-size: 26px; line-height: 1.45; }
@@ -285,11 +280,11 @@
     border: 2px solid var(--ink);
   }
   .flip-num {
-    font-family: var(--font-mono); font-size: 22px;
+    font-family: var(--font-mono); font-size: 24px;
     letter-spacing: 0.1em; opacity: 0.8;
   }
   .flip-word { font-family: var(--font-display); font-weight: 700; font-size: 96px; letter-spacing: -0.03em; line-height: 0.95; }
-  .flip-hint { font-size: 20px; opacity: 0.85; }
+  .flip-hint { font-size: 24px; opacity: 0.85; }
   .flip-desc { font-size: 26px; line-height: 1.45; }
 
   /* S5 / S9 / S11 — definition slides */
@@ -340,25 +335,25 @@
   }
   .vs-cell { padding: 28px 32px; font-size: 28px; }
   .vs-cell.head { background: var(--ink); color: var(--bg); font-family: var(--font-display); font-weight: 700; font-size: 32px; }
-  .vs-cell.row-label { font-family: var(--font-mono); color: var(--muted); font-size: 22px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .vs-cell.row-label { font-family: var(--font-mono); color: var(--muted); font-size: 24px; letter-spacing: 0.1em; text-transform: uppercase; }
   .vs-cell:not(:last-child) { border-right: 1px solid rgba(14,21,48,0.15); }
   .vs-row:not(:last-child) .vs-cell { border-bottom: 1px solid rgba(14,21,48,0.15); }
   .vs-pill {
     display: inline-block; padding: 6px 18px; border-radius: 999px;
-    font-size: 22px; font-family: var(--font-mono); letter-spacing: 0.05em;
+    font-size: 24px; font-family: var(--font-mono); letter-spacing: 0.05em;
   }
   .vs-pill.no { background: rgba(255,82,54,0.15); color: var(--coral); }
   .vs-pill.yes { background: var(--lime); color: var(--ink); }
 
   /* S8 — tool icons grid */
   .tools-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
   }
   .tool-card {
-    aspect-ratio: 1;
+    aspect-ratio: 1.7;
     background: white; border-radius: 20px;
     border: 1px solid rgba(14,21,48,0.1);
-    padding: 28px;
+    padding: 24px 26px;
     display: flex; flex-direction: column; justify-content: space-between;
     transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, color 0.3s ease;
     cursor: pointer;
@@ -370,15 +365,15 @@
   }
   .tool-card:hover .tool-name { color: var(--lime); }
   .tool-icon {
-    width: 64px; height: 64px; border-radius: 16px;
+    width: 58px; height: 58px; border-radius: 14px;
     background: var(--bg-alt);
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-display); font-weight: 700; font-size: 32px;
+    font-family: var(--font-display); font-weight: 700; font-size: 28px;
     color: var(--ink);
   }
   .tool-card:hover .tool-icon { background: var(--coral); color: white; }
-  .tool-name { font-family: var(--font-display); font-weight: 600; font-size: 28px; letter-spacing: -0.01em; transition: color 0.3s ease; }
-  .tool-tag { font-family: var(--font-mono); font-size: 16px; color: var(--muted); }
+  .tool-name { font-family: var(--font-display); font-weight: 600; font-size: 26px; letter-spacing: -0.01em; transition: color 0.3s ease; }
+  .tool-tag { font-family: var(--font-mono); font-size: 24px; color: var(--muted); margin-top: 4px; }
   .tool-card:hover .tool-tag { color: rgba(247,243,236,0.7); }
 
   /* S10 — Skills example terminal */
@@ -391,7 +386,7 @@
     position: relative;
   }
   .terminal-bar {
-    display: flex; gap: 10px; margin-bottom: 32px;
+    display: flex; gap: 10px; margin-bottom: 28px;
   }
   .terminal-bar span { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.25); }
   .terminal-bar span:nth-child(1) { background: #FF5236; }
@@ -459,15 +454,15 @@
 
   /* S13 — Connectors grid */
   .conn-grid {
-    display: grid; grid-template-columns: repeat(6, 1fr); gap: 20px;
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px;
   }
   .conn-card {
-    aspect-ratio: 1.2;
+    aspect-ratio: 1.4;
     background: white;
     border: 1px solid rgba(14,21,48,0.1);
     border-radius: 18px;
     display: flex; flex-direction: column; justify-content: center; align-items: center;
-    gap: 14px;
+    gap: 12px;
     transition: all 0.3s ease;
   }
   .conn-card:hover {
@@ -496,7 +491,7 @@
     box-shadow: 0 16px 40px rgba(14,21,48,0.1);
   }
   .orch-node .n-title { font-size: 36px; letter-spacing: -0.01em; }
-  .orch-node .n-sub { font-family: var(--font-body); font-weight: 400; font-size: 20px; color: var(--muted); margin-top: 6px; }
+  .orch-node .n-sub { font-family: var(--font-body); font-weight: 400; font-size: 24px; color: var(--muted); margin-top: 6px; }
   .orch-node.agent { background: var(--ink); color: white; top: 0; left: 50%; transform: translateX(-50%); }
   .orch-node.agent .n-sub { color: rgba(255,255,255,0.6); }
   .orch-node.skills { background: var(--coral); color: white; border-color: var(--coral); bottom: 0; left: 8%; }
@@ -511,7 +506,7 @@
     position: absolute;
     background: var(--lime); color: var(--ink);
     padding: 4px 14px; border-radius: 999px;
-    font-family: var(--font-mono); font-size: 18px;
+    font-family: var(--font-mono); font-size: 24px;
     transform: translate(-50%, -50%);
   }
 
@@ -531,7 +526,7 @@
   }
   .stat-num .pct { font-size: 80px; color: var(--coral); }
   .stat-label { font-family: var(--font-display); font-weight: 600; font-size: 30px; letter-spacing: -0.01em; }
-  .stat-desc { font-size: 22px; line-height: 1.45; color: var(--muted); }
+  .stat-desc { font-size: 24px; line-height: 1.45; color: var(--muted); }
 
   /* S16 — hands-on terminal */
   .step-list { display: flex; flex-direction: column; gap: 24px; }
@@ -548,7 +543,7 @@
   .step-body { padding-top: 8px; }
   .step-title { font-family: var(--font-display); font-weight: 600; font-size: 34px; margin-bottom: 6px; letter-spacing: -0.01em; }
   .step-desc { font-size: 24px; color: var(--ink-soft); line-height: 1.4; }
-  .step-desc code { font-family: var(--font-mono); font-size: 22px; background: var(--bg-alt); padding: 4px 10px; border-radius: 8px; }
+  .step-desc code { font-family: var(--font-mono); font-size: 24px; background: var(--bg-alt); padding: 4px 10px; border-radius: 8px; }
 
   /* S17 — misconceptions */
   .misc-list { display: flex; flex-direction: column; gap: 24px; }
@@ -574,7 +569,7 @@
   }
   .recap-card:nth-child(2) { border-left-color: var(--blue); }
   .recap-card:nth-child(3) { border-left-color: var(--ink); }
-  .recap-eyebrow { font-family: var(--font-mono); font-size: 20px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+  .recap-eyebrow { font-family: var(--font-mono); font-size: 24px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
   .recap-word { font-family: var(--font-display); font-weight: 700; font-size: 56px; letter-spacing: -0.02em; line-height: 1; }
   .recap-line { font-size: 24px; line-height: 1.45; }
 
@@ -583,7 +578,7 @@
   .qa-mark {
     font-family: var(--font-display); font-weight: 700;
     font-size: 520px; line-height: 0.85; letter-spacing: -0.06em;
-    color: var(--ink);
+    color: var(--bg);
     position: relative;
   }
   .qa-mark .amp { color: var(--coral); }
@@ -630,14 +625,14 @@
   <div style="position: relative; z-index: 3;">
     <div class="anim" style="--d: 0s; font-family: var(--font-mono); font-size: 26px; color: var(--lime); letter-spacing: 0.2em; margin-bottom: 36px;">AI · SKILLS · AGENT · MCP</div>
     <h1 class="cover-hero">
-      <span class="line"><span>AI 工具</span></span>
-      <span class="line"><span>實戰入門</span></span>
+      <span class="line">AI 工具</span>
+      <span class="line">實戰入門</span>
     </h1>
-    <div class="cover-meta anim" style="--d: 0.9s;">
-      <span><span class="dot"></span>給大學生的 AI 觀念課</span>
-      <span style="opacity: 0.5;">|</span>
-      <span>Lesson 03</span>
-    </div>
+  </div>
+  <div class="cover-meta anim" style="--d: 0.9s;">
+    <span><span class="dot"></span>給大學生的 AI 觀念課</span>
+    <span style="opacity: 0.5;">|</span>
+    <span>Lesson 03</span>
   </div>
 </section>
 
@@ -687,14 +682,14 @@
       <div class="label">2022 — 2023</div>
       <div class="big">會聊天</div>
       <div class="desc">輸入問題 → 收到答案。<br>對話結束後一切歸零。</div>
-      <div class="mono" style="font-size: 22px; color: var(--muted); margin-top: auto;">CHATBOT</div>
+      <div class="mono" style="font-size: 24px; color: var(--muted); margin-top: auto;">CHATBOT</div>
     </div>
     <div class="arrow-between">→</div>
     <div class="pane right anim-scale" style="--d: 0.6s;">
       <div class="label">2024 — NOW</div>
       <div class="big">會做事</div>
       <div class="desc">給定目標 → 自己拆解、<br>調用工具、完成任務。</div>
-      <div class="mono" style="font-size: 22px; color: var(--lime); margin-top: auto;">AGENT</div>
+      <div class="mono" style="font-size: 24px; color: var(--lime); margin-top: auto;">AGENT</div>
     </div>
   </div>
   <div class="page-num">03 / 19</div>
@@ -716,12 +711,12 @@
             <div class="flip-word">Agent</div>
             <div class="flip-hint" style="margin-top: 16px;">代理人</div>
           </div>
-          <div class="mono" style="font-size: 18px; opacity: 0.6;">→ HOVER</div>
+          <div class="mono" style="font-size: 24px; opacity: 0.6;">→ HOVER</div>
         </div>
         <div class="flip-face flip-back">
           <div class="flip-num accent-coral">01 · AGENT</div>
           <div class="flip-desc">會自己拆解任務、選擇工具、執行、檢查結果的 AI。<br><br>不是一問一答，而是<strong>持續循環</strong>。</div>
-          <div class="mono" style="font-size: 18px; color: var(--muted);">代理人</div>
+          <div class="mono" style="font-size: 24px; color: var(--muted);">代理人</div>
         </div>
       </div>
     </div>
@@ -733,12 +728,12 @@
             <div class="flip-word">Skills</div>
             <div class="flip-hint" style="margin-top: 16px;">技能</div>
           </div>
-          <div class="mono" style="font-size: 18px; opacity: 0.6;">→ HOVER</div>
+          <div class="mono" style="font-size: 24px; opacity: 0.6;">→ HOVER</div>
         </div>
         <div class="flip-face flip-back">
           <div class="flip-num accent-coral">02 · SKILLS</div>
           <div class="flip-desc">寫好的「做事說明書」。<br><br>讓 AI 知道<strong>什麼時候</strong>該做什麼、<strong>怎麼做</strong>。</div>
-          <div class="mono" style="font-size: 18px; color: var(--muted);">技能</div>
+          <div class="mono" style="font-size: 24px; color: var(--muted);">技能</div>
         </div>
       </div>
     </div>
@@ -750,12 +745,12 @@
             <div class="flip-word">MCP</div>
             <div class="flip-hint" style="margin-top: 16px;">模型上下文協定</div>
           </div>
-          <div class="mono" style="font-size: 18px; opacity: 0.6;">→ HOVER</div>
+          <div class="mono" style="font-size: 24px; opacity: 0.6;">→ HOVER</div>
         </div>
         <div class="flip-face flip-back">
           <div class="flip-num accent-coral">03 · MCP</div>
           <div class="flip-desc">AI 與外部世界溝通的「<strong>統一插頭</strong>」。<br><br>一個標準，連到所有工具。</div>
-          <div class="mono" style="font-size: 18px; color: var(--muted);">Model Context Protocol</div>
+          <div class="mono" style="font-size: 24px; color: var(--muted);">Model Context Protocol</div>
         </div>
       </div>
     </div>
@@ -806,19 +801,19 @@
       <path class="loop-arc" d="M 107 380 A 200 200 0 0 1 280 80" stroke-dasharray="600" style="--dash:600;" stroke="var(--ink)" stroke-width="4"/>
       <!-- nodes -->
       <g>
-        <circle cx="280" cy="80" r="58" fill="var(--coral)"/>
-        <text x="280" y="78" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="26" fill="white">THINK</text>
-        <text x="280" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="rgba(255,255,255,0.8)">想</text>
+        <circle cx="280" cy="80" r="68" fill="var(--coral)"/>
+        <text x="280" y="78" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="30" fill="white">THINK</text>
+        <text x="280" y="108" text-anchor="middle" font-family="Noto Sans TC" font-size="24" fill="rgba(255,255,255,0.85)">想</text>
       </g>
       <g>
-        <circle cx="453" cy="380" r="58" fill="var(--blue)"/>
-        <text x="453" y="378" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="28" fill="white">ACT</text>
-        <text x="453" y="402" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="rgba(255,255,255,0.8)">做</text>
+        <circle cx="453" cy="380" r="68" fill="var(--blue)"/>
+        <text x="453" y="378" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="30" fill="white">ACT</text>
+        <text x="453" y="408" text-anchor="middle" font-family="Noto Sans TC" font-size="24" fill="rgba(255,255,255,0.85)">做</text>
       </g>
       <g>
-        <circle cx="107" cy="380" r="58" fill="var(--ink)"/>
-        <text x="107" y="376" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="20" fill="white">OBSERVE</text>
-        <text x="107" y="400" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="var(--lime)">看</text>
+        <circle cx="107" cy="380" r="68" fill="var(--ink)"/>
+        <text x="107" y="376" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="24" fill="white">OBSERVE</text>
+        <text x="107" y="406" text-anchor="middle" font-family="Noto Sans TC" font-size="24" fill="var(--lime)">看</text>
       </g>
       <!-- orbiting dot -->
       <g class="loop-orbit">
@@ -869,9 +864,9 @@
 <!-- ============ 8. Power of tools ============ -->
 <section data-label="Power of tools">
   <div class="page-tag">Skills · 01</div>
-  <div style="margin-bottom: 50px;">
+  <div style="margin-bottom: 40px;">
     <div class="eyebrow anim">工具的力量</div>
-    <h2 class="title anim" style="--d: 0.1s;">沒有工具的 AI，<br>就像沒有手的大腦。<span class="mono" style="font-size: 22px; color: var(--muted); margin-left: 16px;">/ hover 看看</span></h2>
+    <h2 class="title anim" style="--d: 0.1s;">沒有工具的 AI，就像沒有手的大腦。</h2>
   </div>
   <div class="tools-grid">
     <div class="tool-card anim-scale" style="--d: 0.3s;">
@@ -969,7 +964,7 @@
         Skills 是純文字檔。<br>
         簡單、可讀、人人能寫。
       </p>
-      <div class="anim" style="--d: 0.5s; margin-top: 36px; display: flex; flex-direction: column; gap: 14px; font-size: 22px; font-family: var(--font-mono); color: var(--muted);">
+      <div class="anim" style="--d: 0.5s; margin-top: 36px; display: flex; flex-direction: column; gap: 14px; font-size: 24px; font-family: var(--font-mono); color: var(--muted);">
         <div>📁 skills/</div>
         <div style="padding-left: 24px;">└─ final-report/</div>
         <div style="padding-left: 48px;">├─ SKILL.md</div>
@@ -1022,11 +1017,11 @@
     <h2 class="title anim" style="--d: 0.1s;">三個角色，<br>一條共通的線。</h2>
   </div>
   <div class="mcp-diagram anim" style="--d: 0.4s; margin-top: 20px;">
-    <div class="mcp-node ai">AI 模型<div class="mono" style="font-size: 16px; opacity: 0.7; font-weight: 400; margin-top: 6px;">Host</div></div>
+    <div class="mcp-node ai">AI 模型<div class="mono" style="font-size: 24px; opacity: 0.7; font-weight: 400; margin-top: 6px;">Host</div></div>
     <div class="mcp-line"></div>
-    <div class="mcp-node mcp">MCP<div class="mono" style="font-size: 16px; opacity: 0.9; font-weight: 400; margin-top: 6px;">Protocol</div></div>
+    <div class="mcp-node mcp">MCP<div class="mono" style="font-size: 24px; opacity: 0.9; font-weight: 400; margin-top: 6px;">Protocol</div></div>
     <div class="mcp-line"></div>
-    <div class="mcp-node">外部工具<div class="mono" style="font-size: 16px; color: var(--muted); font-weight: 400; margin-top: 6px;">Server</div></div>
+    <div class="mcp-node">外部工具<div class="mono" style="font-size: 24px; color: var(--muted); font-weight: 400; margin-top: 6px;">Server</div></div>
   </div>
   <div class="mcp-layers" style="margin-top: 50px;">
     <div class="mcp-layer anim" style="--d: 0.6s;">
@@ -1053,7 +1048,7 @@
   <div class="page-tag">MCP · 03</div>
   <div style="margin-bottom: 36px;">
     <div class="eyebrow anim">MCP 連接器</div>
-    <h2 class="title anim" style="--d: 0.1s;">一個協定，<br>連到整個世界。<span class="mono" style="font-size: 22px; color: var(--muted); margin-left: 16px;">/ hover</span></h2>
+    <h2 class="title anim" style="--d: 0.1s;">一個協定，<br>連到整個世界。<span class="mono" style="font-size: 24px; color: var(--muted); margin-left: 16px;">/ hover</span></h2>
   </div>
   <div class="conn-grid">
     <div class="conn-card anim-scale" style="--d: 0.3s;"><div class="conn-emoji">📁</div><div class="conn-name">檔案系統</div></div>
@@ -1114,19 +1109,19 @@
   </div>
   <div class="stats-grid">
     <div class="stat-card anim-scale" style="--d: 0.3s;">
-      <div class="mono" style="font-size: 20px; color: var(--coral); letter-spacing: 0.1em;">CASE 01</div>
+      <div class="mono" style="font-size: 24px; color: var(--coral); letter-spacing: 0.1em;">CASE 01</div>
       <div class="stat-num"><span class="counter" data-target="80">0</span><span class="pct">%</span></div>
       <div class="stat-label">節省找資料時間</div>
       <div class="stat-desc">交給 Agent 自動查文獻、整理、寫摘要，學生只審內容。</div>
     </div>
     <div class="stat-card anim-scale" style="--d: 0.5s;">
-      <div class="mono" style="font-size: 20px; color: var(--blue); letter-spacing: 0.1em;">CASE 02</div>
+      <div class="mono" style="font-size: 24px; color: var(--blue); letter-spacing: 0.1em;">CASE 02</div>
       <div class="stat-num"><span class="counter" data-target="24">0</span><span class="pct">/7</span></div>
       <div class="stat-label">隨時待命的助教</div>
       <div class="stat-desc">期末熬夜趕報告？Agent 不睡，給你逐步指引和檢查。</div>
     </div>
     <div class="stat-card anim-scale" style="--d: 0.7s;">
-      <div class="mono" style="font-size: 20px; color: var(--ink); letter-spacing: 0.1em;">CASE 03</div>
+      <div class="mono" style="font-size: 24px; color: var(--ink); letter-spacing: 0.1em;">CASE 03</div>
       <div class="stat-num">×<span class="counter" data-target="10">0</span></div>
       <div class="stat-label">工作流自動化</div>
       <div class="stat-desc">串聯郵件、日曆、檔案、筆記，把重複的事一次串起來。</div>
